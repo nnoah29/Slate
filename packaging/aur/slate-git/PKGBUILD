@@ -39,6 +39,9 @@ package() {
   install -Dm755 target/release/slate "$pkgdir/usr/bin/slate"
   install -Dm644 data/com.nnoah29.slate.desktop "$pkgdir/usr/share/applications/com.nnoah29.slate.desktop"
   install -Dm644 data/com.nnoah29.slate.metainfo.xml "$pkgdir/usr/share/metainfo/com.nnoah29.slate.metainfo.xml"
+  for size in 16x16 32x32 48x48 64x64 128x128 256x256 512x512; do
+    install -Dm644 "data/icons/hicolor/$size/apps/com.nnoah29.slate.png" "$pkgdir/usr/share/icons/hicolor/$size/apps/com.nnoah29.slate.png"
+  done
   install -Dm644 data/icons/hicolor/scalable/apps/com.nnoah29.slate.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/com.nnoah29.slate.svg"
   install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
 }

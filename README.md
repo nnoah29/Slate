@@ -1,8 +1,8 @@
-# Slate
-
-Application de notes Markdown native Linux, sobre, rapide et axée sur l'écriture ("feuille de papier").
-
-![Slate Icon](data/icons/hicolor/scalable/apps/com.nnoah29.slate.svg)
+<div align="center">
+  <img src="data/icons/hicolor/scalable/apps/com.nnoah29.slate.svg" width="128" height="128" alt="Slate Logo" />
+  <h1>Slate</h1>
+  <p>Application de notes Markdown native Linux, sobre, rapide et axée sur l'écriture ("feuille de papier").</p>
+</div>
 
 > 📖 **Documentation complète** : Retrouvez les guides détaillés dans le dossier [`docs/`](docs/) :
 > - [Guide d'utilisation](docs/usage.md)
