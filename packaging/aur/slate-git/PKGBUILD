@@ -1,7 +1,7 @@
 # Maintainer: Noah Toffa <iam@toffanoah.com>
 pkgname=slate-git
 _pkgname=slate
-pkgver=0.1.0.r17.gbb714de
+pkgver=0.1.0.r21.g6540722
 pkgrel=1
 pkgdesc="Minimalist native Linux Markdown notes application"
 arch=('x86_64' 'aarch64')

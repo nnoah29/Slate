@@ -1,2 +1,7 @@
 /target
 .idea/
+*.pkg.tar.zst
+*.pkg.tar.xz
+/packaging/aur/slate-git/src/
+/packaging/aur/slate-git/pkg/
+/packaging/aur/slate-git/slate/
