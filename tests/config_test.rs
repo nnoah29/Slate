@@ -53,10 +53,12 @@ fn test_config_serialization() {
 
 #[test]
 fn test_config_aliases_deserialization() {
-    let raw_json = r#"{"background_blur": 20.0, "background_opacity": 0.6}"#;
+    let raw_json = r#"{"background_blur": 20.0, "background_opacity": 0.6, "font": "JetBrains Mono", "taille_police": 14.5}"#;
     let config: AppConfig = serde_json::from_str(raw_json).expect("deserialize aliases");
     assert_eq!(config.blur, 20.0);
     assert_eq!(config.opacity, 0.6);
+    assert_eq!(config.font_family, Some("JetBrains Mono".to_string()));
+    assert_eq!(config.font_size, 14.5);
 }
 
 #[test]
@@ -120,11 +122,15 @@ fn test_config_save_directory_default_and_resolved() {
 
 #[test]
 fn test_custom_css_generation() {
-    let css_no_blur = slate::app::generate_custom_css(0.5, 0.0);
+    let css_no_blur = slate::app::generate_custom_css(0.5, 0.0, 12.0, Some("Iosevka Nerd Font"));
     assert!(!css_no_blur.contains("backdrop-filter"));
     assert!(css_no_blur.contains("rgba(39, 38, 38, 0.50)"));
+    assert!(css_no_blur.contains("font-family: 'Iosevka Nerd Font', monospace;"));
+    assert!(css_no_blur.contains("font-size: 12.0pt;"));
 
-    let css_blur = slate::app::generate_custom_css(0.7, 12.0);
+    let css_blur = slate::app::generate_custom_css(0.7, 12.0, 14.0, Some("Fira Code"));
     assert!(css_blur.contains("backdrop-filter: blur(12.0px);"));
     assert!(css_blur.contains("rgba(39, 38, 38, 0.70)"));
+    assert!(css_blur.contains("font-family: 'Fira Code', monospace;"));
+    assert!(css_blur.contains("font-size: 14.0pt;"));
 }

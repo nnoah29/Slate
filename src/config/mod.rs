@@ -32,6 +32,14 @@ fn default_blur() -> f64 {
     DEFAULT_BLUR
 }
 
+fn default_font_size() -> f64 {
+    DEFAULT_FONT_SIZE
+}
+
+fn default_font_family() -> Option<String> {
+    Some("Iosevka Nerd Font".to_string())
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum ThemeMode {
     System,
@@ -77,7 +85,19 @@ impl AutoSaveInterval {
 #[serde(default)]
 pub struct AppConfig {
     pub theme: ThemeMode,
+    #[serde(
+        default = "default_font_size",
+        alias = "size",
+        alias = "taille_police",
+        alias = "font_size_pt"
+    )]
     pub font_size: f64,
+    #[serde(
+        default = "default_font_family",
+        alias = "font",
+        alias = "police",
+        alias = "font_name"
+    )]
     pub font_family: Option<String>,
     pub auto_save_interval: AutoSaveInterval,
     pub window_width: i32,

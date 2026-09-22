@@ -29,13 +29,6 @@ scrolledwindow, scrolledwindow viewport, viewport, stack, .view {
     background: transparent;
 }
 
-textview, textview text {
-    background-color: transparent;
-    background: transparent;
-    color: #cdd6f4;
-    caret-color: #f5e0dc;
-}
-
 textview text selection {
     background-color: #45475a;
     color: #cdd6f4;
@@ -76,12 +69,18 @@ textview text selection {
 }
 ";
 
-pub fn generate_custom_css(opacity: f64, blur: f64) -> String {
+pub fn generate_custom_css(
+    opacity: f64,
+    blur: f64,
+    font_size: f64,
+    font_family: Option<&str>,
+) -> String {
     let backdrop = if blur > 0.0 {
         format!("    backdrop-filter: blur({blur:.1}px);\n")
     } else {
         String::new()
     };
+    let family = font_family.unwrap_or("Iosevka Nerd Font");
     format!(
         "{CUSTOM_CSS_BASE}
 window, window.background, .background {{
@@ -93,6 +92,16 @@ window, window.background, .background {{
     box-shadow: none;
     outline: none;
 {backdrop}}}
+
+textview, textview text {{
+    font-family: '{family}', monospace;
+    font-size: {font_size:.1}pt;
+    line-height: 1.35;
+    background-color: transparent;
+    background: transparent;
+    color: #cdd6f4;
+    caret-color: #f5e0dc;
+}}
 "
     )
 }
@@ -143,7 +152,12 @@ impl SlateApp {
 
             if let Some(display) = gdk::Display::default() {
                 let provider = gtk4::CssProvider::new();
-                let css = generate_custom_css(config.opacity, config.blur);
+                let css = generate_custom_css(
+                    config.opacity,
+                    config.blur,
+                    config.font_size,
+                    config.font_family.as_deref(),
+                );
                 provider.load_from_string(&css);
                 gtk4::style_context_add_provider_for_display(
                     &display,
