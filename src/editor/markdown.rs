@@ -1,3 +1,16 @@
+/*
+**  _                                              _      ___    ___
+** | |                                            | |    |__ \  / _ \
+** | |_Created _       _ __   _ __    ___    __ _ | |__     ) || (_) |
+** | '_ \ | | | |     | '_ \ | '_ \  / _ \  / _` || '_ \   / /  \__, |
+** | |_) || |_| |     | | | || | | || (_) || (_| || | | | / /_    / /
+** |_.__/  \__, |     |_| |_||_| |_| \___/  \__,_||_| |_||____|  /_/
+**          __/ |     on 2026-09-22.
+**         |___/
+**
+** Markdown syntax transformations, wrapping, headings, lists, and indentation.
+*/
+
 pub fn toggle_wrap(selected: &str, prefix: &str, suffix: &str) -> (String, usize, usize) {
     if selected.is_empty() {
         let inserted = format!("{prefix}{suffix}");
@@ -5,13 +18,14 @@ pub fn toggle_wrap(selected: &str, prefix: &str, suffix: &str) -> (String, usize
         return (inserted, cursor_offset, cursor_offset);
     }
 
-    if selected.starts_with(prefix) && selected.ends_with(suffix) && selected.len() >= prefix.len() + suffix.len() {
-        // Unwrap
+    if selected.starts_with(prefix)
+        && selected.ends_with(suffix)
+        && selected.len() >= prefix.len() + suffix.len()
+    {
         let unwrapped = &selected[prefix.len()..selected.len() - suffix.len()];
         let len = unwrapped.chars().count();
         (unwrapped.to_string(), 0, len)
     } else {
-        // Wrap
         let wrapped = format!("{prefix}{selected}{suffix}");
         let len = wrapped.chars().count();
         (wrapped, 0, len)
@@ -84,8 +98,7 @@ pub fn toggle_blockquote(line: &str) -> String {
 pub fn toggle_numbered_list(lines: &[&str]) -> Vec<String> {
     let all_numbered = lines.iter().all(|l| {
         let trimmed = l.trim_start();
-        trimmed.chars().next().map_or(false, |c| c.is_ascii_digit())
-            && trimmed.find(". ").is_some()
+        trimmed.chars().next().is_some_and(|c| c.is_ascii_digit()) && trimmed.contains(". ")
     });
 
     if all_numbered {

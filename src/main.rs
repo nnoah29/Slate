@@ -1,3 +1,16 @@
+/*
+**  _                                              _      ___    ___
+** | |                                            | |    |__ \  / _ \
+** | |_Created _       _ __   _ __    ___    __ _ | |__     ) || (_) |
+** | '_ \ | | | |     | '_ \ | '_ \  / _ \  / _` || '_ \   / /  \__, |
+** | |_) || |_| |     | | | || | | || (_) || (_| || | | | / /_    / /
+** |_.__/  \__, |     |_| |_||_| |_| \___/  \__,_||_| |_||____|  /_/
+**          __/ |     on 2026-09-22.
+**         |___/
+**
+** Main application entry point for the Slate Markdown editor CLI and GUI.
+*/
+
 mod app;
 mod config;
 mod document;
@@ -15,7 +28,12 @@ use std::path::PathBuf;
 use tracing_subscriber::EnvFilter;
 
 #[derive(Parser, Debug)]
-#[command(name = "slate", author, version, about = "Minimalist native Linux Markdown notes application")]
+#[command(
+    name = "slate",
+    author,
+    version,
+    about = "Minimalist native Linux Markdown notes application"
+)]
 struct Cli {
     /// Markdown file to open
     #[arg(value_name = "FILE")]
@@ -33,7 +51,6 @@ struct Cli {
 fn main() -> glib::ExitCode {
     let cli = Cli::parse();
 
-    // Setup logging
     let filter = if cli.debug {
         EnvFilter::new("debug,slate=trace")
     } else {
@@ -49,11 +66,7 @@ fn main() -> glib::ExitCode {
 
     libadwaita::init().expect("Failed to initialize libadwaita");
 
-    let initial_file = if cli.new {
-        None
-    } else {
-        cli.file
-    };
+    let initial_file = if cli.new { None } else { cli.file };
 
     let app = SlateApp::new(initial_file);
     app.run()

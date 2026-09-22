@@ -1,3 +1,16 @@
+/*
+**  _                                              _      ___    ___
+** | |                                            | |    |__ \  / _ \
+** | |_Created _       _ __   _ __    ___    __ _ | |__     ) || (_) |
+** | '_ \ | | | |     | '_ \ | '_ \  / _ \  / _` || '_ \   / /  \__, |
+** | |_) || |_| |     | | | || | | || (_) || (_| || | | | / /_    / /
+** |_.__/  \__, |     |_| |_||_| |_| \___/  \__,_||_| |_||____|  /_/
+**          __/ |     on 2026-09-22.
+**         |___/
+**
+** Real-time Markdown syntax concealment and hybrid inline typography controller.
+*/
+
 use gtk4::pango;
 use gtk4::prelude::*;
 use std::cell::Cell;
@@ -104,14 +117,13 @@ pub fn parse_markdown_elements(line: &str) -> Vec<MarkdownElement> {
         indent += 1;
     }
 
-    // 1. Headings: ^( *#{1,6} )(.*)
     let mut hashes = 0;
     let mut i = indent;
     while i < n && chars[i] == '#' {
         hashes += 1;
         i += 1;
     }
-    if hashes >= 1 && hashes <= 6 && i < n && chars[i] == ' ' {
+    if (1..=6).contains(&hashes) && i < n && chars[i] == ' ' {
         let delim_end = i + 1;
         let heading_type = match hashes {
             1 => SpanType::H1,
@@ -134,7 +146,6 @@ pub fn parse_markdown_elements(line: &str) -> Vec<MarkdownElement> {
         return elements;
     }
 
-    // 2. Blockquotes: ^( *> )(.*)
     if indent + 1 < n && chars[indent] == '>' && chars[indent + 1] == ' ' {
         elements.push(MarkdownElement {
             start: indent,
@@ -147,7 +158,6 @@ pub fn parse_markdown_elements(line: &str) -> Vec<MarkdownElement> {
         return elements;
     }
 
-    // 3. Checkboxes: ^( *[-*+] \[[ xX]\] )(.*)
     if indent + 5 < n
         && (chars[indent] == '-' || chars[indent] == '*' || chars[indent] == '+')
         && chars[indent + 1] == ' '
@@ -170,8 +180,11 @@ pub fn parse_markdown_elements(line: &str) -> Vec<MarkdownElement> {
         return elements;
     }
 
-    // 4. Code block fence line: ^( *```.*)
-    if indent + 2 < n && chars[indent] == '`' && chars[indent + 1] == '`' && chars[indent + 2] == '`' {
+    if indent + 2 < n
+        && chars[indent] == '`'
+        && chars[indent + 1] == '`'
+        && chars[indent + 2] == '`'
+    {
         elements.push(MarkdownElement {
             start: indent,
             end: n,
@@ -182,125 +195,145 @@ pub fn parse_markdown_elements(line: &str) -> Vec<MarkdownElement> {
         return elements;
     }
 
-    // 5. Standard line inline elements
     parse_inline_elements(&chars, 0, n, &mut elements);
     elements
 }
 
-fn parse_inline_elements(chars: &[char], start: usize, end: usize, elements: &mut Vec<MarkdownElement>) {
+fn parse_inline_elements(
+    chars: &[char],
+    start: usize,
+    end: usize,
+    elements: &mut Vec<MarkdownElement>,
+) {
     let mut i = start;
     while i < end {
-        // Inline code: `...`
-        if chars[i] == '`' {
-            if let Some(close) = find_closing_char(chars, i + 1, end, '`') {
-                if close > i + 1 {
-                    elements.push(MarkdownElement {
-                        start: i,
-                        end: close + 1,
-                        is_line_block: false,
-                        delims: vec![(i, i + 1), (close, close + 1)],
-                        styles: vec![(i + 1, close, SpanType::Code)],
-                    });
-                    i = close + 1;
-                    continue;
-                }
-            }
+        if chars[i] == '`'
+            && let Some(close) = find_closing_char(chars, i + 1, end, '`')
+            && close > i + 1
+        {
+            elements.push(MarkdownElement {
+                start: i,
+                end: close + 1,
+                is_line_block: false,
+                delims: vec![(i, i + 1), (close, close + 1)],
+                styles: vec![(i + 1, close, SpanType::Code)],
+            });
+            i = close + 1;
+            continue;
         }
 
-        // Markdown link: [text](url)
-        if chars[i] == '[' {
-            if let Some(close_bracket) = find_closing_char(chars, i + 1, end, ']') {
-                if close_bracket + 1 < end && chars[close_bracket + 1] == '(' {
-                    if let Some(close_paren) = find_closing_char(chars, close_bracket + 2, end, ')') {
-                        elements.push(MarkdownElement {
-                            start: i,
-                            end: close_paren + 1,
-                            is_line_block: false,
-                            delims: vec![(i, i + 1), (close_bracket, close_paren + 1)],
-                            styles: vec![(i + 1, close_bracket, SpanType::Link)],
-                        });
-                        i = close_paren + 1;
-                        continue;
-                    }
-                }
-            }
+        if chars[i] == '['
+            && let Some(close_bracket) = find_closing_char(chars, i + 1, end, ']')
+            && close_bracket + 1 < end
+            && chars[close_bracket + 1] == '('
+            && let Some(close_paren) = find_closing_char(chars, close_bracket + 2, end, ')')
+        {
+            elements.push(MarkdownElement {
+                start: i,
+                end: close_paren + 1,
+                is_line_block: false,
+                delims: vec![(i, i + 1), (close_bracket, close_paren + 1)],
+                styles: vec![(i + 1, close_bracket, SpanType::Link)],
+            });
+            i = close_paren + 1;
+            continue;
         }
 
-        // Bold + Italic: ***text***
-        if i + 2 < end && chars[i] == '*' && chars[i + 1] == '*' && chars[i + 2] == '*' {
-            if let Some(close) = find_closing_triple(chars, i + 3, end, '*') {
-                if close > i + 3 {
-                    elements.push(MarkdownElement {
-                        start: i,
-                        end: close + 3,
-                        is_line_block: false,
-                        delims: vec![(i, i + 3), (close, close + 3)],
-                        styles: vec![
-                            (i + 3, close, SpanType::Bold),
-                            (i + 3, close, SpanType::Italic),
-                        ],
-                    });
-                    i = close + 3;
-                    continue;
-                }
-            }
+        if i + 2 < end
+            && chars[i] == '*'
+            && chars[i + 1] == '*'
+            && chars[i + 2] == '*'
+            && let Some(close) = find_closing_triple(chars, i + 3, end, '*')
+            && close > i + 3
+        {
+            elements.push(MarkdownElement {
+                start: i,
+                end: close + 3,
+                is_line_block: false,
+                delims: vec![(i, i + 3), (close, close + 3)],
+                styles: vec![
+                    (i + 3, close, SpanType::Bold),
+                    (i + 3, close, SpanType::Italic),
+                ],
+            });
+            i = close + 3;
+            continue;
         }
 
-        // Bold: **text**
-        if i + 1 < end && chars[i] == '*' && chars[i + 1] == '*' {
-            if let Some(close) = find_closing_double(chars, i + 2, end, '*') {
-                if close > i + 2 {
-                    elements.push(MarkdownElement {
-                        start: i,
-                        end: close + 2,
-                        is_line_block: false,
-                        delims: vec![(i, i + 2), (close, close + 2)],
-                        styles: vec![(i + 2, close, SpanType::Bold)],
-                    });
-                    i = close + 2;
-                    continue;
-                }
-            }
+        if i + 1 < end
+            && chars[i] == '*'
+            && chars[i + 1] == '*'
+            && let Some(close) = find_closing_double(chars, i + 2, end, '*')
+            && close > i + 2
+        {
+            elements.push(MarkdownElement {
+                start: i,
+                end: close + 2,
+                is_line_block: false,
+                delims: vec![(i, i + 2), (close, close + 2)],
+                styles: vec![(i + 2, close, SpanType::Bold)],
+            });
+            i = close + 2;
+            continue;
         }
 
-        // Bold: __text__
-        if i + 1 < end && chars[i] == '_' && chars[i + 1] == '_' {
-            if let Some(close) = find_closing_double(chars, i + 2, end, '_') {
-                if close > i + 2 {
-                    elements.push(MarkdownElement {
-                        start: i,
-                        end: close + 2,
-                        is_line_block: false,
-                        delims: vec![(i, i + 2), (close, close + 2)],
-                        styles: vec![(i + 2, close, SpanType::Bold)],
-                    });
-                    i = close + 2;
-                    continue;
-                }
-            }
+        if i + 1 < end
+            && chars[i] == '_'
+            && chars[i + 1] == '_'
+            && let Some(close) = find_closing_double(chars, i + 2, end, '_')
+            && close > i + 2
+        {
+            elements.push(MarkdownElement {
+                start: i,
+                end: close + 2,
+                is_line_block: false,
+                delims: vec![(i, i + 2), (close, close + 2)],
+                styles: vec![(i + 2, close, SpanType::Bold)],
+            });
+            i = close + 2;
+            continue;
         }
 
-        // Strikethrough: ~~text~~
-        if i + 1 < end && chars[i] == '~' && chars[i + 1] == '~' {
-            if let Some(close) = find_closing_double(chars, i + 2, end, '~') {
-                if close > i + 2 {
-                    elements.push(MarkdownElement {
-                        start: i,
-                        end: close + 2,
-                        is_line_block: false,
-                        delims: vec![(i, i + 2), (close, close + 2)],
-                        styles: vec![(i + 2, close, SpanType::Strike)],
-                    });
-                    i = close + 2;
-                    continue;
-                }
-            }
+        if i + 1 < end
+            && chars[i] == '~'
+            && chars[i + 1] == '~'
+            && let Some(close) = find_closing_double(chars, i + 2, end, '~')
+            && close > i + 2
+        {
+            elements.push(MarkdownElement {
+                start: i,
+                end: close + 2,
+                is_line_block: false,
+                delims: vec![(i, i + 2), (close, close + 2)],
+                styles: vec![(i + 2, close, SpanType::Strike)],
+            });
+            i = close + 2;
+            continue;
         }
 
-        // Italic: *text*
-        if chars[i] == '*' && (i + 1 < end && chars[i + 1] != '*' && chars[i + 1] != ' ') {
-            if let Some(close) = find_closing_single_asterisk(chars, i + 1, end) {
-                if close > i + 1 {
+        if chars[i] == '*'
+            && (i + 1 < end && chars[i + 1] != '*' && chars[i + 1] != ' ')
+            && let Some(close) = find_closing_single_asterisk(chars, i + 1, end)
+            && close > i + 1
+        {
+            elements.push(MarkdownElement {
+                start: i,
+                end: close + 1,
+                is_line_block: false,
+                delims: vec![(i, i + 1), (close, close + 1)],
+                styles: vec![(i + 1, close, SpanType::Italic)],
+            });
+            i = close + 1;
+            continue;
+        }
+
+        if chars[i] == '_' && (i + 1 < end && chars[i + 1] != '_' && chars[i + 1] != ' ') {
+            let is_boundary_before = i == 0 || !chars[i - 1].is_alphanumeric();
+            if is_boundary_before
+                && let Some(close) = find_closing_single_underscore(chars, i + 1, end)
+            {
+                let is_boundary_after = close + 1 >= end || !chars[close + 1].is_alphanumeric();
+                if is_boundary_after && close > i + 1 {
                     elements.push(MarkdownElement {
                         start: i,
                         end: close + 1,
@@ -314,47 +347,24 @@ fn parse_inline_elements(chars: &[char], start: usize, end: usize, elements: &mu
             }
         }
 
-        // Italic: _text_
-        if chars[i] == '_' && (i + 1 < end && chars[i + 1] != '_' && chars[i + 1] != ' ') {
-            let is_boundary_before = i == 0 || !chars[i - 1].is_alphanumeric();
-            if is_boundary_before {
-                if let Some(close) = find_closing_single_underscore(chars, i + 1, end) {
-                    let is_boundary_after = close + 1 >= end || !chars[close + 1].is_alphanumeric();
-                    if is_boundary_after && close > i + 1 {
-                        elements.push(MarkdownElement {
-                            start: i,
-                            end: close + 1,
-                            is_line_block: false,
-                            delims: vec![(i, i + 1), (close, close + 1)],
-                            styles: vec![(i + 1, close, SpanType::Italic)],
-                        });
-                        i = close + 1;
-                        continue;
-                    }
-                }
-            }
-        }
-
         i += 1;
     }
 }
 
 fn find_closing_char(chars: &[char], start: usize, end: usize, target: char) -> Option<usize> {
-    for j in start..end {
-        if chars[j] == target && (j == start || chars[j - 1] != '\\') {
-            return Some(j);
-        }
-    }
-    None
+    (start..end).find(|&j| chars[j] == target && (j == start || chars[j - 1] != '\\'))
 }
 
 fn find_closing_double(chars: &[char], start: usize, end: usize, target: char) -> Option<usize> {
     let mut j = start;
     while j + 1 < end {
-        if chars[j] == target && chars[j + 1] == target && (j == start || chars[j - 1] != '\\') {
-            if j > start && chars[j - 1] != ' ' {
-                return Some(j);
-            }
+        if chars[j] == target
+            && chars[j + 1] == target
+            && (j == start || chars[j - 1] != '\\')
+            && j > start
+            && chars[j - 1] != ' '
+        {
+            return Some(j);
         }
         j += 1;
     }
@@ -368,10 +378,10 @@ fn find_closing_triple(chars: &[char], start: usize, end: usize, target: char) -
             && chars[j + 1] == target
             && chars[j + 2] == target
             && (j == start || chars[j - 1] != '\\')
+            && j > start
+            && chars[j - 1] != ' '
         {
-            if j > start && chars[j - 1] != ' ' {
-                return Some(j);
-            }
+            return Some(j);
         }
         j += 1;
     }
@@ -437,10 +447,7 @@ pub fn parse_markdown_spans(line: &str) -> Vec<SpanToken> {
 
 pub fn register_tags(tag_table: &gtk4::TextTagTable) {
     if tag_table.lookup(BOLD_TAG).is_none() {
-        let tag = gtk4::TextTag::builder()
-            .name(BOLD_TAG)
-            .weight(700)
-            .build();
+        let tag = gtk4::TextTag::builder().name(BOLD_TAG).weight(700).build();
         tag_table.add(&tag);
     }
     if tag_table.lookup(ITALIC_TAG).is_none() {
@@ -534,7 +541,6 @@ pub fn register_tags(tag_table: &gtk4::TextTagTable) {
             .build();
         tag_table.add(&tag);
     }
-    // Add conceal tag last for highest priority
     if tag_table.lookup(CONCEAL_TAG).is_none() {
         let tag = gtk4::TextTag::builder()
             .name(CONCEAL_TAG)
@@ -551,7 +557,6 @@ fn update_line(buffer: &gtk4::TextBuffer, line_idx: i32, cursor_info: Option<(us
             line_end.forward_to_line_end();
         }
 
-        // 1. Clear existing slate tags on this line
         let tag_table = buffer.tag_table();
         for &tag_name in ALL_SLATE_TAGS {
             if let Some(tag) = tag_table.lookup(tag_name) {
@@ -559,7 +564,6 @@ fn update_line(buffer: &gtk4::TextBuffer, line_idx: i32, cursor_info: Option<(us
             }
         }
 
-        // 2. Parse elements on this line
         let line_text = buffer.text(&line_start, &line_end, false);
         let elements = parse_markdown_elements(&line_text);
 
@@ -567,33 +571,26 @@ fn update_line(buffer: &gtk4::TextBuffer, line_idx: i32, cursor_info: Option<(us
             let is_editing = match cursor_info {
                 Some((c_start, c_end)) => {
                     if elem.is_line_block {
-                        // Heading / blockquote: revealed when cursor is on this line
                         true
                     } else if c_start != c_end {
-                        // Text selection on this line: revealed if selection overlaps element
                         c_start < elem.end && c_end > elem.start
                     } else {
-                        // Single cursor: revealed ONLY when cursor is strictly inside the element
                         c_start > elem.start && c_start < elem.end
                     }
                 }
                 None => false,
             };
 
-            // Conceal delimiters if not actively editing this element
-            if !is_editing {
-                if let Some(conceal_tag) = tag_table.lookup(CONCEAL_TAG) {
-                    for &(d_start, d_end) in &elem.delims {
-                        let mut span_start = line_start;
-                        span_start.forward_chars(d_start as i32);
-                        let mut span_end = line_start;
-                        span_end.forward_chars(d_end as i32);
-                        buffer.apply_tag(&conceal_tag, &span_start, &span_end);
-                    }
+            if !is_editing && let Some(conceal_tag) = tag_table.lookup(CONCEAL_TAG) {
+                for &(d_start, d_end) in &elem.delims {
+                    let mut span_start = line_start;
+                    span_start.forward_chars(d_start as i32);
+                    let mut span_end = line_start;
+                    span_end.forward_chars(d_end as i32);
+                    buffer.apply_tag(&conceal_tag, &span_start, &span_end);
                 }
             }
 
-            // Always apply formatting styles (bold, italic, code, link, strike, heading, etc.)
             for &(s_start, s_end, span_type) in &elem.styles {
                 if let Some(style_tag) = tag_table.lookup(span_type.tag_name()) {
                     let mut span_start = line_start;
@@ -690,14 +687,16 @@ impl ConcealController {
         let cur_col = cursor_iter.line_offset() as usize;
 
         let sel_info = self.buffer.selection_bounds().map(|(s, e)| {
-            (s.line(), s.line_offset() as usize, e.line(), e.line_offset() as usize)
+            (
+                s.line(),
+                s.line_offset() as usize,
+                e.line(),
+                e.line_offset() as usize,
+            )
         });
 
         if cur_line != old_line {
-            // Cursor moved to a different line:
-            // 1. Previous line is now inactive
             update_line(&self.buffer, old_line, None);
-            // 2. New line is active
             let cursor_info = match sel_info {
                 Some((sl, sc, el, ec)) if sl == cur_line && el == cur_line => Some((sc, ec)),
                 _ => Some((cur_col, cur_col)),
@@ -706,7 +705,6 @@ impl ConcealController {
             self.last_line.set(cur_line);
             self.last_cursor_pos.set(cursor_pos);
         } else if cursor_pos != old_pos {
-            // Cursor moved within the same line:
             let cursor_info = match sel_info {
                 Some((sl, sc, el, ec)) if sl == cur_line && el == cur_line => Some((sc, ec)),
                 _ => Some((cur_col, cur_col)),
@@ -733,7 +731,12 @@ impl ConcealController {
         let cur_col = cursor_iter.line_offset() as usize;
 
         let sel_info = self.buffer.selection_bounds().map(|(s, e)| {
-            (s.line(), s.line_offset() as usize, e.line(), e.line_offset() as usize)
+            (
+                s.line(),
+                s.line_offset() as usize,
+                e.line(),
+                e.line_offset() as usize,
+            )
         });
         let cursor_info = match sel_info {
             Some((sl, sc, el, ec)) if sl == cur_line && el == cur_line => Some((sc, ec)),

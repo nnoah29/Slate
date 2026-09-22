@@ -1,3 +1,16 @@
+/*
+**  _                                              _      ___    ___
+** | |                                            | |    |__ \  / _ \
+** | |_Created _       _ __   _ __    ___    __ _ | |__     ) || (_) |
+** | '_ \ | | | |     | '_ \ | '_ \  / _ \  / _` || '_ \   / /  \__, |
+** | |_) || |_| |     | | | || | | || (_) || (_| || | | | / /_    / /
+** |_.__/  \__, |     |_| |_||_| |_| \___/  \__,_||_| |_||____|  /_/
+**          __/ |     on 2026-09-22.
+**         |___/
+**
+** 100% native GTK 4 Markdown preview renderer using pulldown-cmark.
+*/
+
 use gtk4::gdk;
 use gtk4::glib;
 use gtk4::prelude::*;
@@ -45,7 +58,6 @@ impl PreviewView {
     }
 
     pub fn render_markdown(&self, markdown_text: &str) {
-        // Clear existing widgets
         while let Some(child) = self.content_box.first_child() {
             self.content_box.remove(&child);
         }
@@ -187,7 +199,8 @@ impl<'a> AstRenderer<'a> {
             }
             Tag::Link { dest_url, .. } => {
                 let escaped_url = glib::markup_escape_text(&dest_url);
-                self.inline_markup.push_str(&format!("<a href=\"{escaped_url}\">"));
+                self.inline_markup
+                    .push_str(&format!("<a href=\"{escaped_url}\">"));
             }
             Tag::Table(alignments) => {
                 self.in_table = true;
@@ -349,7 +362,10 @@ impl<'a> AstRenderer<'a> {
             .build();
 
         label.connect_activate_link(|_, uri| {
-            let _ = gtk4::gio::AppInfo::launch_default_for_uri(uri, None::<&gtk4::gio::AppLaunchContext>);
+            let _ = gtk4::gio::AppInfo::launch_default_for_uri(
+                uri,
+                None::<&gtk4::gio::AppLaunchContext>,
+            );
             glib::Propagation::Stop
         });
 
@@ -416,7 +432,6 @@ impl<'a> AstRenderer<'a> {
         card.add_css_class("card");
         card.add_css_class("code-block");
 
-        // Header with language and copy button
         let header = gtk4::Box::builder()
             .orientation(gtk4::Orientation::Horizontal)
             .spacing(8)

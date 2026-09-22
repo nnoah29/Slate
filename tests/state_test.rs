@@ -1,3 +1,16 @@
+/*
+**  _                                              _      ___    ___
+** | |                                            | |    |__ \  / _ \
+** | |_Created _       _ __   _ __    ___    __ _ | |__     ) || (_) |
+** | '_ \ | | | |     | '_ \ | '_ \  / _ \  / _` || '_ \   / /  \__, |
+** | |_) || |_| |     | | | || | | || (_) || (_| || | | | / /_    / /
+** |_.__/  \__, |     |_| |_||_| |_| \___/  \__,_||_| |_||____|  /_/
+**          __/ |     on 2026-09-22.
+**         |___/
+**
+** Unit tests for document lifecycle and clean/dirty state transitions.
+*/
+
 use slate::document::state::{Document, DocumentStatus};
 use std::path::PathBuf;
 use std::time::SystemTime;

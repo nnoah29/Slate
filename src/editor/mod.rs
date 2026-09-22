@@ -1,3 +1,16 @@
+/*
+**  _                                              _      ___    ___
+** | |                                            | |    |__ \  / _ \
+** | |_Created _       _ __   _ __    ___    __ _ | |__     ) || (_) |
+** | '_ \ | | | |     | '_ \ | '_ \  / _ \  / _` || '_ \   / /  \__, |
+** | |_) || |_| |     | | | || | | || (_) || (_| || | | | / /_    / /
+** |_.__/  \__, |     |_| |_||_| |_| \___/  \__,_||_| |_||____|  /_/
+**          __/ |     on 2026-09-22.
+**         |___/
+**
+** Text editor view configuration and layout wrapper.
+*/
+
 pub mod buffer;
 pub mod conceal;
 pub mod formatting;
@@ -7,8 +20,8 @@ pub use buffer::EditorBuffer;
 pub use conceal::ConcealController;
 
 use gtk4::prelude::*;
-use sourceview5::prelude::*;
 use sourceview5::View;
+use sourceview5::prelude::*;
 
 pub struct EditorView {
     container: gtk4::ScrolledWindow,
@@ -23,7 +36,6 @@ impl EditorView {
         let buffer = EditorBuffer::new();
         let view = View::with_buffer(buffer.buffer());
 
-        // Configure minimal paper aesthetic
         view.set_show_line_numbers(false);
         view.set_show_right_margin(false);
         view.set_auto_indent(true);
@@ -38,7 +50,7 @@ impl EditorView {
         view.set_monospace(true);
         view.set_hexpand(true);
         view.set_vexpand(true);
-        view.set_accepts_tab(false); // allows tab keybinding to trigger indent
+        view.set_accepts_tab(false);
 
         let css_provider = gtk4::CssProvider::new();
         #[allow(deprecated)]

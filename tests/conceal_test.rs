@@ -1,16 +1,27 @@
-use slate::editor::conceal::{parse_markdown_spans, SpanType};
+/*
+**  _                                              _      ___    ___
+** | |                                            | |    |__ \  / _ \
+** | |_Created _       _ __   _ __    ___    __ _ | |__     ) || (_) |
+** | '_ \ | | | |     | '_ \ | '_ \  / _ \  / _` || '_ \   / /  \__, |
+** | |_) || |_| |     | | | || | | || (_) || (_| || | | | / /_    / /
+** |_.__/  \__, |     |_| |_||_| |_| \___/  \__,_||_| |_||____|  /_/
+**          __/ |     on 2026-09-22.
+**         |___/
+**
+** Unit tests for Markdown delimiter concealment and element parsing.
+*/
+
+use slate::editor::conceal::{SpanType, parse_markdown_spans};
 
 #[test]
 fn test_heading_h1() {
     let line = "# Mon grand titre";
     let spans = parse_markdown_spans(line);
 
-    // Span 0: "# " concealed
     assert_eq!(spans[0].start, 0);
     assert_eq!(spans[0].end, 2);
     assert_eq!(spans[0].span_type, SpanType::Conceal);
 
-    // Span 1: "Mon grand titre" H1
     assert_eq!(spans[1].start, 2);
     assert_eq!(spans[1].end, 17);
     assert_eq!(spans[1].span_type, SpanType::H1);
@@ -21,12 +32,10 @@ fn test_heading_h2_with_french_accent() {
     let line = "## Réunion d'été";
     let spans = parse_markdown_spans(line);
 
-    // Span 0: "## " concealed
     assert_eq!(spans[0].start, 0);
     assert_eq!(spans[0].end, 3);
     assert_eq!(spans[0].span_type, SpanType::Conceal);
 
-    // Span 1: "Réunion d'été" H2 (Unicode chars count = 13, so end = 3 + 13 = 16)
     assert_eq!(spans[1].start, 3);
     assert_eq!(spans[1].end, 16);
     assert_eq!(spans[1].span_type, SpanType::H2);
@@ -50,17 +59,14 @@ fn test_bold_spans() {
     let line = "Voici du **texte en gras** ici.";
     let spans = parse_markdown_spans(line);
 
-    // Delim 1: "**" at 9..11
     assert_eq!(spans[0].start, 9);
     assert_eq!(spans[0].end, 11);
     assert_eq!(spans[0].span_type, SpanType::Conceal);
 
-    // Content: "texte en gras" at 11..24
     assert_eq!(spans[1].start, 11);
     assert_eq!(spans[1].end, 24);
     assert_eq!(spans[1].span_type, SpanType::Bold);
 
-    // Delim 2: "**" at 24..26
     assert_eq!(spans[2].start, 24);
     assert_eq!(spans[2].end, 26);
     assert_eq!(spans[2].span_type, SpanType::Conceal);
@@ -125,17 +131,14 @@ fn test_link_spans() {
     let line = "Documentation sur [Slate](https://github.com/slate).";
     let spans = parse_markdown_spans(line);
 
-    // Delim 1: "[" at 18..19
     assert_eq!(spans[0].start, 18);
     assert_eq!(spans[0].end, 19);
     assert_eq!(spans[0].span_type, SpanType::Conceal);
 
-    // Link label: "Slate" at 19..24
     assert_eq!(spans[1].start, 19);
     assert_eq!(spans[1].end, 24);
     assert_eq!(spans[1].span_type, SpanType::Link);
 
-    // Delim 2: "](https://github.com/slate)" at 24..51
     assert_eq!(spans[2].start, 24);
     assert_eq!(spans[2].end, 51);
     assert_eq!(spans[2].span_type, SpanType::Conceal);
@@ -160,10 +163,6 @@ fn test_multiple_spans_on_single_line() {
     let line = "Du **gras** et du `code` et du *italique*.";
     let spans = parse_markdown_spans(line);
 
-    // Should contain:
-    // ** (conceal), gras (bold), ** (conceal)
-    // ` (conceal), code (code), ` (conceal)
-    // * (conceal), italique (italic), * (conceal)
     assert_eq!(spans.len(), 9);
     assert_eq!(spans[1].span_type, SpanType::Bold);
     assert_eq!(spans[4].span_type, SpanType::Code);
@@ -174,7 +173,6 @@ fn test_multiple_spans_on_single_line() {
 fn test_unclosed_delimiters_ignored() {
     let line = "Ceci a une seule * étoile et deux ** étoiles.";
     let spans = parse_markdown_spans(line);
-    // Unclosed markers should not produce valid conceal spans
     assert!(spans.is_empty());
 }
 
@@ -187,19 +185,16 @@ fn test_user_screenshot_elements() {
 
     assert_eq!(elements.len(), 3);
 
-    // 1. **gras** at 0..8
     assert_eq!(elements[0].start, 0);
     assert_eq!(elements[0].end, 8);
     assert_eq!(elements[0].delims, vec![(0, 2), (6, 8)]);
     assert_eq!(elements[0].styles[0].2, SpanType::Bold);
 
-    // 2. *italique* at 9..19
     assert_eq!(elements[1].start, 9);
     assert_eq!(elements[1].end, 19);
     assert_eq!(elements[1].delims, vec![(9, 10), (18, 19)]);
     assert_eq!(elements[1].styles[0].2, SpanType::Italic);
 
-    // 3. _italique_ at 20..30
     assert_eq!(elements[2].start, 20);
     assert_eq!(elements[2].end, 30);
     assert_eq!(elements[2].delims, vec![(20, 21), (29, 30)]);

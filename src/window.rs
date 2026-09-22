@@ -1,3 +1,16 @@
+/*
+**  _                                              _      ___    ___
+** | |                                            | |    |__ \  / _ \
+** | |_Created _       _ __   _ __    ___    __ _ | |__     ) || (_) |
+** | '_ \ | | | |     | '_ \ | '_ \  / _ \  / _` || '_ \   / /  \__, |
+** | |_) || |_| |     | | | || | | || (_) || (_| || | | | / /_    / /
+** |_.__/  \__, |     |_| |_||_| |_| \___/  \__,_||_| |_||____|  /_/
+**          __/ |     on 2026-09-22.
+**         |___/
+**
+** Main window presentation, editor/preview stacking, and document persistence workflows.
+*/
+
 use crate::config::AppConfig;
 use crate::document::Document;
 use crate::editor::EditorView;
@@ -46,7 +59,11 @@ pub struct SlateWindow {
 }
 
 impl SlateWindow {
-    pub fn new(app: &libadwaita::Application, initial_path: Option<PathBuf>, config: AppConfig) -> Rc<Self> {
+    pub fn new(
+        app: &libadwaita::Application,
+        initial_path: Option<PathBuf>,
+        config: AppConfig,
+    ) -> Rc<Self> {
         let window = libadwaita::ApplicationWindow::builder()
             .application(app)
             .title("Slate")
@@ -98,9 +115,7 @@ impl SlateWindow {
         let toast_overlay = libadwaita::ToastOverlay::new();
         toast_overlay.set_child(Some(&main_box));
 
-        let window_handle = gtk4::WindowHandle::builder()
-            .child(&toast_overlay)
-            .build();
+        let window_handle = gtk4::WindowHandle::builder().child(&toast_overlay).build();
 
         window.set_content(Some(&window_handle));
 
@@ -124,32 +139,24 @@ impl SlateWindow {
     }
 
     fn init(self: &Rc<Self>, initial_path: Option<PathBuf>) {
-        // Set initial font
         {
             let s = self.state.borrow();
             self.editor_view
                 .set_font(s.font_size, s.font_family.as_deref());
         }
 
-        // Setup buffer change notification
         self.setup_buffer_tracking();
 
-        // Setup keyboard shortcuts
         self.setup_shortcuts();
 
-        // Setup drag & drop
         self.setup_drag_and_drop();
 
-        // Setup window lifecycle & closing
         self.setup_close_handler();
 
-        // Setup auto-save timer
         self.setup_autosave();
 
-        // Setup external modification check on window focus
         self.setup_focus_watcher();
 
-        // Open initial path if provided
         if let Some(path) = initial_path {
             self.load_file(&path);
         } else {
@@ -181,11 +188,12 @@ impl SlateWindow {
         let this = Rc::downgrade(self);
 
         key_controller.connect_key_pressed(move |_, keyval, _, state| {
-            if let Some(this) = this.upgrade() {
-                if let Some(action) = this.shortcut_mgr.match_action(keyval, state) {
-                    this.handle_action(action);
-                    return glib::Propagation::Stop;
-                }
+            let Some(this) = this.upgrade() else {
+                return glib::Propagation::Proceed;
+            };
+            if let Some(action) = this.shortcut_mgr.match_action(keyval, state) {
+                this.handle_action(action);
+                return glib::Propagation::Stop;
             }
             glib::Propagation::Proceed
         });
@@ -263,8 +271,8 @@ impl SlateWindow {
 
     fn change_zoom(&self, delta: f64) {
         let mut s = self.state.borrow_mut();
-        s.font_size = (s.font_size + delta)
-            .clamp(crate::config::MIN_FONT_SIZE, crate::config::MAX_FONT_SIZE);
+        s.font_size =
+            (s.font_size + delta).clamp(crate::config::MIN_FONT_SIZE, crate::config::MAX_FONT_SIZE);
         let size = s.font_size;
         let family = s.font_family.clone();
         s.config.font_size = size;
@@ -301,18 +309,21 @@ impl SlateWindow {
         let this = Rc::downgrade(self);
 
         target.connect_drop(move |_, value, _, _| {
-            if let Ok(file_list) = value.get::<gdk::FileList>() {
-                let files = file_list.files();
-                if let Some(file) = files.first() {
-                    if let Some(path) = file.path() {
-                        if let Some(this) = this.upgrade() {
-                            this.prompt_unsaved_if_dirty(PendingAction::OpenPath(path));
-                            return true;
-                        }
-                    }
-                }
-            }
-            false
+            let Ok(file_list) = value.get::<gdk::FileList>() else {
+                return false;
+            };
+            let files = file_list.files();
+            let Some(file) = files.first() else {
+                return false;
+            };
+            let Some(path) = file.path() else {
+                return false;
+            };
+            let Some(this) = this.upgrade() else {
+                return false;
+            };
+            this.prompt_unsaved_if_dirty(PendingAction::OpenPath(path));
+            true
         });
 
         self.window.add_controller(target);
@@ -366,10 +377,11 @@ impl SlateWindow {
     fn setup_focus_watcher(self: &Rc<Self>) {
         let this = Rc::downgrade(self);
         self.window.connect_is_active_notify(move |win| {
-            if win.is_active() {
-                if let Some(this) = this.upgrade() {
-                    this.check_external_changes();
-                }
+            if !win.is_active() {
+                return;
+            }
+            if let Some(this) = this.upgrade() {
+                this.check_external_changes();
             }
         });
     }
@@ -404,28 +416,31 @@ impl SlateWindow {
         let this = Rc::downgrade(self);
         let path_buf = path.to_path_buf();
 
-        dialog.choose(Some(&self.window), None::<&gio::Cancellable>, move |response| {
-            if let Some(this) = this.upgrade() {
-                match response.as_str() {
-                    "reload" => {
-                        this.load_file(&path_buf);
-                        this.show_toast("Document rechargé depuis le disque.");
-                    }
-                    "keep" => {
-                        // Update mtime to current disk mtime to prevent repeating prompt
-                        if let Ok(metadata) = std::fs::metadata(&path_buf) {
-                            if let Ok(mtime) = metadata.modified() {
+        dialog.choose(
+            Some(&self.window),
+            None::<&gio::Cancellable>,
+            move |response| {
+                if let Some(this) = this.upgrade() {
+                    match response.as_str() {
+                        "reload" => {
+                            this.load_file(&path_buf);
+                            this.show_toast("Document rechargé depuis le disque.");
+                        }
+                        "keep" => {
+                            if let Ok(mtime) =
+                                std::fs::metadata(&path_buf).and_then(|m| m.modified())
+                            {
                                 this.state.borrow_mut().document.set_last_mtime(Some(mtime));
                             }
                         }
+                        "diff" => {
+                            this.show_diff_dialog(&path_buf);
+                        }
+                        _ => {}
                     }
-                    "diff" => {
-                        this.show_diff_dialog(&path_buf);
-                    }
-                    _ => {}
                 }
-            }
-        });
+            },
+        );
     }
 
     fn show_diff_dialog(self: &Rc<Self>, path: &Path) {
@@ -510,23 +525,22 @@ impl SlateWindow {
         file_dialog.set_filters(Some(&filters));
 
         let this = Rc::downgrade(self);
-        file_dialog.save(
-            Some(&self.window),
-            None::<&gio::Cancellable>,
-            move |res| {
-                if let Ok(file) = res {
-                    if let Some(path) = file.path() {
-                        if let Some(this) = this.upgrade() {
-                            this.perform_save_to_path(&path, false);
-                            let pending = this.state.borrow_mut().pending_action.take();
-                            if let Some(pending) = pending {
-                                this.execute_pending_action(pending);
-                            }
-                        }
-                    }
-                }
-            },
-        );
+        file_dialog.save(Some(&self.window), None::<&gio::Cancellable>, move |res| {
+            let Ok(file) = res else {
+                return;
+            };
+            let Some(path) = file.path() else {
+                return;
+            };
+            let Some(this) = this.upgrade() else {
+                return;
+            };
+            this.perform_save_to_path(&path, false);
+            let pending = this.state.borrow_mut().pending_action.take();
+            if let Some(pending) = pending {
+                this.execute_pending_action(pending);
+            }
+        });
     }
 
     pub fn open_dialog(self: &Rc<Self>) {
@@ -549,19 +563,18 @@ impl SlateWindow {
         file_dialog.set_filters(Some(&filters));
 
         let this = Rc::downgrade(self);
-        file_dialog.open(
-            Some(&self.window),
-            None::<&gio::Cancellable>,
-            move |res| {
-                if let Ok(file) = res {
-                    if let Some(path) = file.path() {
-                        if let Some(this) = this.upgrade() {
-                            this.load_file(&path);
-                        }
-                    }
-                }
-            },
-        );
+        file_dialog.open(Some(&self.window), None::<&gio::Cancellable>, move |res| {
+            let Ok(file) = res else {
+                return;
+            };
+            let Some(path) = file.path() else {
+                return;
+            };
+            let Some(this) = this.upgrade() else {
+                return;
+            };
+            this.load_file(&path);
+        });
     }
 
     pub fn load_file(self: &Rc<Self>, path: &Path) {
@@ -608,7 +621,7 @@ impl SlateWindow {
         let doc_name = self.state.borrow().document.display_name();
         let dialog = libadwaita::AlertDialog::builder()
             .heading("Enregistrer les modifications ?")
-            .body(&format!(
+            .body(format!(
                 "Le document \"{doc_name}\" contient des modifications non enregistrées."
             ))
             .build();
@@ -622,34 +635,41 @@ impl SlateWindow {
         dialog.set_close_response("cancel");
 
         let this = Rc::downgrade(self);
-        dialog.choose(Some(&self.window), None::<&gio::Cancellable>, move |response| {
-            if let Some(this) = this.upgrade() {
-                match response.as_str() {
-                    "save" => {
-                        let has_path = this.state.borrow().document.path().is_some();
-                        if has_path {
-                            this.save_document(false);
+        dialog.choose(
+            Some(&self.window),
+            None::<&gio::Cancellable>,
+            move |response| {
+                if let Some(this) = this.upgrade() {
+                    match response.as_str() {
+                        "save" => {
+                            let has_path = this.state.borrow().document.path().is_some();
+                            if has_path {
+                                this.save_document(false);
+                                let act = this.state.borrow_mut().pending_action.take();
+                                if let Some(act) = act {
+                                    this.execute_pending_action(act);
+                                }
+                            } else {
+                                this.save_as_dialog();
+                            }
+                        }
+                        "discard" => {
+                            this.state
+                                .borrow_mut()
+                                .document
+                                .mark_clean(SystemTime::now());
                             let act = this.state.borrow_mut().pending_action.take();
                             if let Some(act) = act {
                                 this.execute_pending_action(act);
                             }
-                        } else {
-                            this.save_as_dialog();
                         }
-                    }
-                    "discard" => {
-                        this.state.borrow_mut().document.mark_clean(SystemTime::now());
-                        let act = this.state.borrow_mut().pending_action.take();
-                        if let Some(act) = act {
-                            this.execute_pending_action(act);
+                        _ => {
+                            this.state.borrow_mut().pending_action = None;
                         }
-                    }
-                    _ => {
-                        this.state.borrow_mut().pending_action = None;
                     }
                 }
-            }
-        });
+            },
+        );
     }
 
     fn execute_pending_action(self: &Rc<Self>, action: PendingAction) {
@@ -658,7 +678,6 @@ impl SlateWindow {
             PendingAction::OpenPath(path) => self.load_file(&path),
             PendingAction::OpenDialog => self.open_dialog(),
             PendingAction::CloseDocument => {
-                // Section 8 / User review: Ctrl+W resets to empty document if one window
                 self.new_document();
             }
             PendingAction::QuitApp => {
@@ -675,10 +694,7 @@ impl SlateWindow {
     }
 
     pub fn show_toast(&self, text: &str) {
-        let toast = libadwaita::Toast::builder()
-            .title(text)
-            .timeout(3)
-            .build();
+        let toast = libadwaita::Toast::builder().title(text).timeout(3).build();
         self.toast_overlay.add_toast(toast);
     }
 }

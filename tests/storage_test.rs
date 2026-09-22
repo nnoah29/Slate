@@ -1,3 +1,16 @@
+/*
+**  _                                              _      ___    ___
+** | |                                            | |    |__ \  / _ \
+** | |_Created _       _ __   _ __    ___    __ _ | |__     ) || (_) |
+** | '_ \ | | | |     | '_ \ | '_ \  / _ \  / _` || '_ \   / /  \__, |
+** | |_) || |_| |     | | | || | | || (_) || (_| || | | | / /_    / /
+** |_.__/  \__, |     |_| |_||_| |_| \___/  \__,_||_| |_||____|  /_/
+**          __/ |     on 2026-09-22.
+**         |___/
+**
+** Unit tests for atomic disk persistence, conflict detection, and diffs.
+*/
+
 use slate::storage::{check_external_modification, generate_diff, read_file, write_file_atomic};
 use std::fs;
 use std::thread;
@@ -9,7 +22,8 @@ fn test_write_and_read_atomic() {
     let tmp = NamedTempFile::new().expect("create temp file");
     let path = tmp.path();
 
-    let text = "# Ma note\n\nAvec des accents éèêë, des caractères japonais 日本語 et des emojis 🚀 ✨\n";
+    let text =
+        "# Ma note\n\nAvec des accents éèêë, des caractères japonais 日本語 et des emojis 🚀 ✨\n";
     let mtime1 = write_file_atomic(path, text).expect("write file");
 
     let (content, mtime2) = read_file(path).expect("read file");
@@ -32,14 +46,11 @@ fn test_external_modification_detection() {
     let initial = "Version initiale";
     let mtime = write_file_atomic(path, initial).expect("write initial");
 
-    // Immediately check -> should not be modified
     let modified = check_external_modification(path, mtime).expect("check mod");
     assert!(!modified);
 
-    // Sleep slightly to ensure filesystem timestamp increments
     thread::sleep(Duration::from_millis(1100));
 
-    // External change directly via std::fs
     fs::write(path, "Version modifiée ailleurs").expect("external write");
 
     let modified_after = check_external_modification(path, mtime).expect("check mod after");

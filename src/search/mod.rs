@@ -1,3 +1,16 @@
+/*
+**  _                                              _      ___    ___
+** | |                                            | |    |__ \  / _ \
+** | |_Created _       _ __   _ __    ___    __ _ | |__     ) || (_) |
+** | '_ \ | | | |     | '_ \ | '_ \  / _ \  / _` || '_ \   / /  \__, |
+** | |_) || |_| |     | | | || | | || (_) || (_| || | | | / /_    / /
+** |_.__/  \__, |     |_| |_||_| |_| \___/  \__,_||_| |_||____|  /_/
+**          __/ |     on 2026-09-22.
+**         |___/
+**
+** In-document search and replace floating bar with real-time highlighting.
+*/
+
 use gtk4::gdk;
 use gtk4::glib;
 use gtk4::prelude::*;
@@ -76,7 +89,6 @@ impl SearchReplaceBar {
         top_row.append(&next_btn);
         top_row.append(&close_btn);
 
-        // Replace row
         let replace_row = gtk4::Box::builder()
             .orientation(gtk4::Orientation::Horizontal)
             .spacing(6)
@@ -91,13 +103,9 @@ impl SearchReplaceBar {
             .hexpand(true)
             .build();
 
-        let replace_btn = gtk4::Button::builder()
-            .label("Remplacer")
-            .build();
+        let replace_btn = gtk4::Button::builder().label("Remplacer").build();
 
-        let replace_all_btn = gtk4::Button::builder()
-            .label("Tout remplacer")
-            .build();
+        let replace_all_btn = gtk4::Button::builder().label("Tout remplacer").build();
 
         replace_row.append(&replace_entry);
         replace_row.append(&replace_btn);
@@ -112,14 +120,12 @@ impl SearchReplaceBar {
 
         let search_context: Rc<RefCell<Option<SearchContext>>> = Rc::new(RefCell::new(None));
 
-        // Connect buffer & settings
         if let Some(buf) = view.buffer().downcast_ref::<sourceview5::Buffer>() {
             let ctx = SearchContext::new(buf, Some(&search_settings));
             ctx.set_highlight(true);
             *search_context.borrow_mut() = Some(ctx);
         }
 
-        // On search text changed
         {
             let settings = search_settings.clone();
             let count_lbl = count_label.clone();
@@ -142,13 +148,11 @@ impl SearchReplaceBar {
                             count_lbl.set_label(&format!("{count} trouvés"));
                         }
                     }
-                    // Auto select first match
                     Self::navigate_next(&view_clone, &ctx_cell);
                 }
             });
         }
 
-        // Next button / Enter
         {
             let ctx_cell = search_context.clone();
             let view_clone = view.clone();
@@ -164,7 +168,6 @@ impl SearchReplaceBar {
             });
         }
 
-        // Prev button
         {
             let ctx_cell = search_context.clone();
             let view_clone = view.clone();
@@ -173,7 +176,6 @@ impl SearchReplaceBar {
             });
         }
 
-        // Close button
         {
             let revealer = container.clone();
             let view_clone = view.clone();
@@ -183,7 +185,6 @@ impl SearchReplaceBar {
             });
         }
 
-        // Replace one
         {
             let rep_entry = replace_entry.clone();
             let ctx_cell = search_context.clone();
@@ -193,7 +194,6 @@ impl SearchReplaceBar {
             });
         }
 
-        // Replace all
         {
             let rep_entry = replace_entry.clone();
             let ctx_cell = search_context.clone();
@@ -203,7 +203,6 @@ impl SearchReplaceBar {
             });
         }
 
-        // Keyboard navigation (Esc to close)
         let key_controller = gtk4::EventControllerKey::new();
         {
             let revealer = container.clone();
@@ -296,7 +295,11 @@ impl SearchReplaceBar {
         }
     }
 
-    fn replace_all(ctx_cell: &Rc<RefCell<Option<SearchContext>>>, replace_text: &str, count_lbl: &gtk4::Label) {
+    fn replace_all(
+        ctx_cell: &Rc<RefCell<Option<SearchContext>>>,
+        replace_text: &str,
+        count_lbl: &gtk4::Label,
+    ) {
         if let Some(ctx) = ctx_cell.borrow().as_ref() {
             match ctx.replace_all(replace_text) {
                 Ok(()) => {

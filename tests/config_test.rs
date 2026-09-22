@@ -1,4 +1,17 @@
-use slate::config::{AppConfig, AutoSaveInterval, ThemeMode, MAX_RECENT_FILES};
+/*
+**  _                                              _      ___    ___
+** | |                                            | |    |__ \  / _ \
+** | |_Created _       _ __   _ __    ___    __ _ | |__     ) || (_) |
+** | '_ \ | | | |     | '_ \ | '_ \  / _ \  / _` || '_ \   / /  \__, |
+** | |_) || |_| |     | | | || | | || (_) || (_| || | | | / /_    / /
+** |_.__/  \__, |     |_| |_||_| |_| \___/  \__,_||_| |_||____|  /_/
+**          __/ |     on 2026-09-22.
+**         |___/
+**
+** Unit tests for configuration defaults, serialization, and boundary limits.
+*/
+
+use slate::config::{AppConfig, AutoSaveInterval, MAX_RECENT_FILES, ThemeMode};
 use std::path::PathBuf;
 
 #[test]
@@ -28,16 +41,17 @@ fn test_config_serialization() {
 #[test]
 fn test_config_validation_and_recent_files_limit() {
     let mut config = AppConfig::default();
-    config.font_size = 2.0; // too small
-    config.window_width = 100; // too small
+    config.font_size = 2.0;
+    config.window_width = 100;
     config.validate();
 
     assert_eq!(config.font_size, slate::config::MIN_FONT_SIZE);
     assert_eq!(config.window_width, 320);
 
-    // Test recent files capping
     for i in 0..30 {
-        config.recent_files.push(PathBuf::from(format!("/tmp/note_{i}.md")));
+        config
+            .recent_files
+            .push(PathBuf::from(format!("/tmp/note_{i}.md")));
     }
     config.validate();
     assert_eq!(config.recent_files.len(), MAX_RECENT_FILES);

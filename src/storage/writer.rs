@@ -1,3 +1,16 @@
+/*
+**  _                                              _      ___    ___
+** | |                                            | |    |__ \  / _ \
+** | |_Created _       _ __   _ __    ___    __ _ | |__     ) || (_) |
+** | '_ \ | | | |     | '_ \ | '_ \  / _ \  / _` || '_ \   / /  \__, |
+** | |_) || |_| |     | | | || | | || (_) || (_| || | | | / /_    / /
+** |_.__/  \__, |     |_| |_||_| |_| \___/  \__,_||_| |_||____|  /_/
+**          __/ |     on 2026-09-22.
+**         |___/
+**
+** Atomic disk writing via temporary file replacement and fsync.
+*/
+
 use super::StorageError;
 use std::fs::{self, File};
 use std::io::Write;
@@ -35,7 +48,6 @@ pub fn write_file_atomic(path: &Path, content: &str) -> Result<SystemTime, Stora
         });
     }
 
-    // Atomically replace original file
     if let Err(e) = fs::rename(&temp_path, path) {
         let _ = fs::remove_file(&temp_path);
         return Err(StorageError::Io {

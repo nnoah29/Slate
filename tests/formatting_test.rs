@@ -1,3 +1,16 @@
+/*
+**  _                                              _      ___    ___
+** | |                                            | |    |__ \  / _ \
+** | |_Created _       _ __   _ __    ___    __ _ | |__     ) || (_) |
+** | '_ \ | | | |     | '_ \ | '_ \  / _ \  / _` || '_ \   / /  \__, |
+** | |_) || |_| |     | | | || | | || (_) || (_| || | | | / /_    / /
+** |_.__/  \__, |     |_| |_||_| |_| \___/  \__,_||_| |_||____|  /_/
+**          __/ |     on 2026-09-22.
+**         |___/
+**
+** Unit tests for Markdown wrapping, lists, quotes, and heading cycles.
+*/
+
 use slate::editor::markdown::*;
 
 #[test]
@@ -7,7 +20,6 @@ fn test_toggle_wrap_bold() {
     assert_eq!(start, 0);
     assert_eq!(end, 11);
 
-    // Test unwrap
     let (unwrapped, u_start, u_end) = toggle_wrap(&wrapped, "**", "**");
     assert_eq!(unwrapped, "Bonjour");
     assert_eq!(u_start, 0);

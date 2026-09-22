@@ -1,3 +1,16 @@
+/*
+**  _                                              _      ___    ___
+** | |                                            | |    |__ \  / _ \
+** | |_Created _       _ __   _ __    ___    __ _ | |__     ) || (_) |
+** | '_ \ | | | |     | '_ \ | '_ \  / _ \  / _` || '_ \   / /  \__, |
+** | |_) || |_| |     | | | || | | || (_) || (_| || | | | / /_    / /
+** |_.__/  \__, |     |_| |_||_| |_| \___/  \__,_||_| |_||____|  /_/
+**          __/ |     on 2026-09-22.
+**         |___/
+**
+** Centralized keyboard shortcut registry and event matching.
+*/
+
 use gtk4::gdk::{self, Key};
 use std::collections::HashMap;
 
@@ -41,7 +54,12 @@ pub struct KeyBinding {
 
 impl KeyBinding {
     pub fn new(key: Key, ctrl: bool, shift: bool, alt: bool) -> Self {
-        Self { key, ctrl, shift, alt }
+        Self {
+            key,
+            ctrl,
+            shift,
+            alt,
+        }
     }
 
     pub fn matches(&self, keyval: Key, modifier_state: gdk::ModifierType) -> bool {
@@ -49,7 +67,6 @@ impl KeyBinding {
         let has_shift = modifier_state.contains(gdk::ModifierType::SHIFT_MASK);
         let has_alt = modifier_state.contains(gdk::ModifierType::ALT_MASK);
 
-        // Normalize case for matching keys (e.g. Key::b vs Key::B)
         let key_match = self.key == keyval || self.key.to_lower() == keyval.to_lower();
         key_match && self.ctrl == has_ctrl && self.shift == has_shift && self.alt == has_alt
     }
@@ -69,7 +86,6 @@ impl ShortcutManager {
     }
 
     pub fn register_defaults(&mut self) {
-        // System Shortcuts
         self.bind(Key::s, true, false, false, Action::Save);
         self.bind(Key::S, true, true, false, Action::SaveAs);
         self.bind(Key::n, true, false, false, Action::New);
@@ -79,15 +95,12 @@ impl ShortcutManager {
         self.bind(Key::z, true, false, false, Action::Undo);
         self.bind(Key::Z, true, true, false, Action::Redo);
 
-        // Markdown Preview & Conceal
         self.bind(Key::e, true, false, false, Action::TogglePreview);
         self.bind(Key::l, true, false, false, Action::ToggleConceal);
 
-        // Search & Replace
         self.bind(Key::f, true, false, false, Action::Search);
         self.bind(Key::h, true, false, false, Action::Replace);
 
-        // Markdown Formatting
         self.bind(Key::b, true, false, false, Action::FormatBold);
         self.bind(Key::i, true, false, false, Action::FormatItalic);
         self.bind(Key::k, true, false, false, Action::FormatLink);
@@ -99,18 +112,21 @@ impl ShortcutManager {
         self.bind(Key::Q, true, true, false, Action::FormatBlockquote);
         self.bind(Key::q, true, true, false, Action::FormatBlockquote);
 
-        // Lists
         self.bind(Key::_8, true, true, false, Action::FormatBulletList);
         self.bind(Key::asterisk, true, true, false, Action::FormatBulletList);
         self.bind(Key::_7, true, true, false, Action::FormatNumberedList);
-        self.bind(Key::ampersand, true, true, false, Action::FormatNumberedList);
+        self.bind(
+            Key::ampersand,
+            true,
+            true,
+            false,
+            Action::FormatNumberedList,
+        );
 
-        // Indent / Unindent
         self.bind(Key::Tab, false, false, false, Action::Indent);
         self.bind(Key::ISO_Left_Tab, false, true, false, Action::Unindent);
         self.bind(Key::Tab, false, true, false, Action::Unindent);
 
-        // Zoom
         self.bind(Key::plus, true, false, false, Action::ZoomIn);
         self.bind(Key::equal, true, false, false, Action::ZoomIn);
         self.bind(Key::minus, true, false, false, Action::ZoomOut);

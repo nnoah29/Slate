@@ -1,3 +1,16 @@
+/*
+**  _                                              _      ___    ___
+** | |                                            | |    |__ \  / _ \
+** | |_Created _       _ __   _ __    ___    __ _ | |__     ) || (_) |
+** | '_ \ | | | |     | '_ \ | '_ \  / _ \  / _` || '_ \   / /  \__, |
+** | |_) || |_| |     | | | || | | || (_) || (_| || | | | / /_    / /
+** |_.__/  \__, |     |_| |_||_| |_| \___/  \__,_||_| |_||____|  /_/
+**          __/ |     on 2026-09-22.
+**         |___/
+**
+** Storage subsystem, external modification detection, and text diffing.
+*/
+
 pub mod reader;
 pub mod writer;
 
@@ -16,15 +29,22 @@ pub enum StorageError {
     #[allow(dead_code)]
     PermissionDenied(String),
     InvalidUtf8(String),
-    Io { path: String, source: std::io::Error },
+    Io {
+        path: String,
+        source: std::io::Error,
+    },
 }
 
 impl fmt::Display for StorageError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::NotFound(path) => write!(f, "Le fichier n'a pas été trouvé : {path}"),
-            Self::PermissionDenied(path) => write!(f, "Permission refusée pour le fichier : {path}"),
-            Self::InvalidUtf8(path) => write!(f, "Le fichier n'est pas un texte UTF-8 valide : {path}"),
+            Self::PermissionDenied(path) => {
+                write!(f, "Permission refusée pour le fichier : {path}")
+            }
+            Self::InvalidUtf8(path) => {
+                write!(f, "Le fichier n'est pas un texte UTF-8 valide : {path}")
+            }
             Self::Io { path, source } => write!(f, "Erreur d'accès à {path} : {source}"),
         }
     }
@@ -32,7 +52,10 @@ impl fmt::Display for StorageError {
 
 impl std::error::Error for StorageError {}
 
-pub fn check_external_modification(path: &Path, recorded_mtime: SystemTime) -> Result<bool, StorageError> {
+pub fn check_external_modification(
+    path: &Path,
+    recorded_mtime: SystemTime,
+) -> Result<bool, StorageError> {
     if !path.exists() {
         return Ok(false);
     }
@@ -42,7 +65,6 @@ pub fn check_external_modification(path: &Path, recorded_mtime: SystemTime) -> R
     })?;
     let current_mtime = metadata.modified().unwrap_or(recorded_mtime);
 
-    // If current mtime on disk is strictly newer than recorded mtime
     Ok(current_mtime > recorded_mtime)
 }
 

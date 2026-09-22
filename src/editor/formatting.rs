@@ -1,3 +1,16 @@
+/*
+**  _                                              _      ___    ___
+** | |                                            | |    |__ \  / _ \
+** | |_Created _       _ __   _ __    ___    __ _ | |__     ) || (_) |
+** | '_ \ | | | |     | '_ \ | '_ \  / _ \  / _` || '_ \   / /  \__, |
+** | |_) || |_| |     | | | || | | || (_) || (_| || | | | / /_    / /
+** |_.__/  \__, |     |_| |_||_| |_| \___/  \__,_||_| |_||____|  /_/
+**          __/ |     on 2026-09-22.
+**         |___/
+**
+** Buffer formatting actions and keyboard shortcut handlers for Markdown elements.
+*/
+
 use super::markdown;
 use gtk4::prelude::*;
 
@@ -88,8 +101,12 @@ where
         (cursor.line(), cursor.line())
     };
 
-    let mut line_start = buffer.iter_at_line(start_line).unwrap_or_else(|| buffer.start_iter());
-    let mut line_end = buffer.iter_at_line(end_line).unwrap_or_else(|| buffer.end_iter());
+    let mut line_start = buffer
+        .iter_at_line(start_line)
+        .unwrap_or_else(|| buffer.start_iter());
+    let mut line_end = buffer
+        .iter_at_line(end_line)
+        .unwrap_or_else(|| buffer.end_iter());
     if !line_end.ends_line() {
         line_end.forward_to_line_end();
     }
@@ -125,8 +142,12 @@ pub fn apply_numbered_list(buffer: &gtk4::TextBuffer) {
         (cursor.line(), cursor.line())
     };
 
-    let mut line_start = buffer.iter_at_line(start_line).unwrap_or_else(|| buffer.start_iter());
-    let mut line_end = buffer.iter_at_line(end_line).unwrap_or_else(|| buffer.end_iter());
+    let mut line_start = buffer
+        .iter_at_line(start_line)
+        .unwrap_or_else(|| buffer.start_iter());
+    let mut line_end = buffer
+        .iter_at_line(end_line)
+        .unwrap_or_else(|| buffer.end_iter());
     if !line_end.ends_line() {
         line_end.forward_to_line_end();
     }
@@ -146,8 +167,12 @@ pub fn apply_indent(buffer: &gtk4::TextBuffer) {
     if let Some((start, end)) = buffer.selection_bounds() {
         let start_line = start.line();
         let end_line = end.line();
-        let mut line_start = buffer.iter_at_line(start_line).unwrap_or_else(|| buffer.start_iter());
-        let mut line_end = buffer.iter_at_line(end_line).unwrap_or_else(|| buffer.end_iter());
+        let mut line_start = buffer
+            .iter_at_line(start_line)
+            .unwrap_or_else(|| buffer.start_iter());
+        let mut line_end = buffer
+            .iter_at_line(end_line)
+            .unwrap_or_else(|| buffer.end_iter());
         if !line_end.ends_line() {
             line_end.forward_to_line_end();
         }
@@ -175,8 +200,12 @@ pub fn apply_unindent(buffer: &gtk4::TextBuffer) {
         (cursor.line(), cursor.line())
     };
 
-    let mut line_start = buffer.iter_at_line(start_line).unwrap_or_else(|| buffer.start_iter());
-    let mut line_end = buffer.iter_at_line(end_line).unwrap_or_else(|| buffer.end_iter());
+    let mut line_start = buffer
+        .iter_at_line(start_line)
+        .unwrap_or_else(|| buffer.start_iter());
+    let mut line_end = buffer
+        .iter_at_line(end_line)
+        .unwrap_or_else(|| buffer.end_iter());
     if !line_end.ends_line() {
         line_end.forward_to_line_end();
     }

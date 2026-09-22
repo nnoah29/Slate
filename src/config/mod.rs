@@ -1,3 +1,16 @@
+/*
+**  _                                              _      ___    ___
+** | |                                            | |    |__ \  / _ \
+** | |_Created _       _ __   _ __    ___    __ _ | |__     ) || (_) |
+** | '_ \ | | | |     | '_ \ | '_ \  / _ \  / _` || '_ \   / /  \__, |
+** | |_) || |_| |     | | | || | | || (_) || (_| || | | | / /_    / /
+** |_.__/  \__, |     |_| |_||_| |_| \___/  \__,_||_| |_||____|  /_/
+**          __/ |     on 2026-09-22.
+**         |___/
+**
+** User configuration management, XDG file persistence, and validation.
+*/
+
 use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -119,10 +132,10 @@ impl AppConfig {
             return Err("Unable to determine config directory".into());
         };
 
-        if let Some(parent) = path.parent() {
-            if let Err(err) = fs::create_dir_all(parent) {
-                return Err(format!("Failed to create config directory: {err}"));
-            }
+        if let Some(parent) = path.parent()
+            && let Err(err) = fs::create_dir_all(parent)
+        {
+            return Err(format!("Failed to create config directory: {err}"));
         }
 
         let json = serde_json::to_string_pretty(self)
@@ -133,17 +146,9 @@ impl AppConfig {
     }
 
     pub fn validate(&mut self) {
-        if self.font_size < MIN_FONT_SIZE {
-            self.font_size = MIN_FONT_SIZE;
-        } else if self.font_size > MAX_FONT_SIZE {
-            self.font_size = MAX_FONT_SIZE;
-        }
-        if self.window_width < 320 {
-            self.window_width = 320;
-        }
-        if self.window_height < 240 {
-            self.window_height = 240;
-        }
+        self.font_size = self.font_size.clamp(MIN_FONT_SIZE, MAX_FONT_SIZE);
+        self.window_width = self.window_width.max(320);
+        self.window_height = self.window_height.max(240);
         if self.recent_files.len() > MAX_RECENT_FILES {
             self.recent_files.truncate(MAX_RECENT_FILES);
         }

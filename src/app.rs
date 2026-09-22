@@ -1,3 +1,16 @@
+/*
+**  _                                              _      ___    ___
+** | |                                            | |    |__ \  / _ \
+** | |_Created _       _ __   _ __    ___    __ _ | |__     ) || (_) |
+** | '_ \ | | | |     | '_ \ | '_ \  / _ \  / _` || '_ \   / /  \__, |
+** | |_) || |_| |     | | | || | | || (_) || (_| || | | | / /_    / /
+** |_.__/  \__, |     |_| |_||_| |_| \___/  \__,_||_| |_||____|  /_/
+**          __/ |     on 2026-09-22.
+**         |___/
+**
+** Application life-cycle, DBus IPC multi-instance, and global CSS theme integration.
+*/
+
 use crate::config::{AppConfig, ThemeMode};
 use crate::window::SlateWindow;
 use gtk4::gdk;
@@ -83,7 +96,9 @@ impl SlateApp {
     pub fn new(initial_file: Option<PathBuf>) -> Self {
         let app = libadwaita::Application::builder()
             .application_id(APP_ID)
-            .flags(gio::ApplicationFlags::HANDLES_COMMAND_LINE | gio::ApplicationFlags::HANDLES_OPEN)
+            .flags(
+                gio::ApplicationFlags::HANDLES_COMMAND_LINE | gio::ApplicationFlags::HANDLES_OPEN,
+            )
             .build();
 
         let active_window = Rc::new(RefCell::new(None));
@@ -105,11 +120,9 @@ impl SlateApp {
         let active_win = self.active_window.clone();
         let init_file = self.initial_file.clone();
 
-        // Startup
         self.app.connect_startup(|_| {
             let config = AppConfig::load();
 
-            // Set color scheme
             let style_mgr = libadwaita::StyleManager::default();
             match config.theme {
                 ThemeMode::System => style_mgr.set_color_scheme(libadwaita::ColorScheme::Default),
@@ -117,7 +130,6 @@ impl SlateApp {
                 ThemeMode::Dark => style_mgr.set_color_scheme(libadwaita::ColorScheme::ForceDark),
             }
 
-            // Load global CSS
             if let Some(display) = gdk::Display::default() {
                 let provider = gtk4::CssProvider::new();
                 provider.load_from_string(CUSTOM_CSS);
@@ -129,7 +141,6 @@ impl SlateApp {
             }
         });
 
-        // Activate
         {
             let active_win = active_win.clone();
             let init_file = init_file.clone();
@@ -147,7 +158,6 @@ impl SlateApp {
             });
         }
 
-        // Open (from desktop / file manager / dbus)
         {
             let active_win = active_win.clone();
             self.app.connect_open(move |app, files, _| {
@@ -167,14 +177,12 @@ impl SlateApp {
             });
         }
 
-        // Command line (from CLI invocations, forwarding to primary instance)
         {
             let active_win = active_win.clone();
             self.app.connect_command_line(move |app, cmd_line| {
                 let args = cmd_line.arguments();
                 let mut target_file: Option<PathBuf> = None;
 
-                // Simple CLI parsing for file path
                 for arg in args.iter().skip(1) {
                     let s = arg.to_str().unwrap_or("");
                     if !s.starts_with('-') {

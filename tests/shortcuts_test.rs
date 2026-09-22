@@ -1,3 +1,16 @@
+/*
+**  _                                              _      ___    ___
+** | |                                            | |    |__ \  / _ \
+** | |_Created _       _ __   _ __    ___    __ _ | |__     ) || (_) |
+** | '_ \ | | | |     | '_ \ | '_ \  / _ \  / _` || '_ \   / /  \__, |
+** | |_) || |_| |     | | | || | | || (_) || (_| || | | | / /_    / /
+** |_.__/  \__, |     |_| |_||_| |_| \___/  \__,_||_| |_||____|  /_/
+**          __/ |     on 2026-09-22.
+**         |___/
+**
+** Unit tests for shortcut key matching, defaults, and conflict verification.
+*/
+
 use gtk4::gdk::{Key, ModifierType};
 use slate::shortcuts::{Action, KeyBinding, ShortcutManager};
 
@@ -14,25 +27,21 @@ fn test_shortcut_binding_matches() {
 fn test_shortcut_manager_defaults() {
     let mgr = ShortcutManager::new();
 
-    // Ctrl+S -> Save
     assert_eq!(
         mgr.match_action(Key::s, ModifierType::CONTROL_MASK),
         Some(Action::Save)
     );
 
-    // Ctrl+B -> FormatBold
     assert_eq!(
         mgr.match_action(Key::b, ModifierType::CONTROL_MASK),
         Some(Action::FormatBold)
     );
 
-    // Ctrl+E -> TogglePreview
     assert_eq!(
         mgr.match_action(Key::e, ModifierType::CONTROL_MASK),
         Some(Action::TogglePreview)
     );
 
-    // Ctrl+F -> Search
     assert_eq!(
         mgr.match_action(Key::f, ModifierType::CONTROL_MASK),
         Some(Action::Search)
