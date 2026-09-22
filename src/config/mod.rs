@@ -73,6 +73,8 @@ pub struct AppConfig {
     pub window_height: i32,
     pub is_maximized: bool,
     #[serde(default)]
+    pub save_directory: Option<PathBuf>,
+    #[serde(default)]
     pub recent_files: Vec<PathBuf>,
     #[serde(default)]
     pub custom_shortcuts: HashMap<String, String>,
@@ -88,6 +90,7 @@ impl Default for AppConfig {
             window_width: 515,
             window_height: 338,
             is_maximized: false,
+            save_directory: BaseDirs::new().map(|b| b.home_dir().to_path_buf()),
             recent_files: Vec::new(),
             custom_shortcuts: HashMap::new(),
         }
@@ -95,6 +98,14 @@ impl Default for AppConfig {
 }
 
 impl AppConfig {
+    pub fn resolved_save_directory(&self) -> Option<PathBuf> {
+        let path = self.save_directory.as_ref()?;
+        if let Ok(stripped) = path.strip_prefix("~") {
+            return BaseDirs::new().map(|b| b.home_dir().join(stripped));
+        }
+        Some(path.clone())
+    }
+
     pub fn config_dir_path() -> Option<PathBuf> {
         BaseDirs::new().map(|base| base.config_dir().join("Slate"))
     }

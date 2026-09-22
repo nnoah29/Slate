@@ -509,11 +509,20 @@ impl SlateWindow {
         }
     }
 
+    fn set_dialog_folder(&self, dialog: &gtk4::FileDialog) {
+        let Some(save_dir) = self.state.borrow().config.resolved_save_directory() else {
+            return;
+        };
+        let file = gio::File::for_path(&save_dir);
+        dialog.set_initial_folder(Some(&file));
+    }
+
     pub fn save_as_dialog(self: &Rc<Self>) {
         let file_dialog = gtk4::FileDialog::builder()
             .title("Enregistrer sous...")
             .initial_name("Sans titre.md")
             .build();
+        self.set_dialog_folder(&file_dialog);
 
         let filter = gtk4::FileFilter::new();
         filter.set_name(Some("Fichiers Markdown (*.md)"));
@@ -547,6 +556,7 @@ impl SlateWindow {
         let file_dialog = gtk4::FileDialog::builder()
             .title("Ouvrir un document Markdown")
             .build();
+        self.set_dialog_folder(&file_dialog);
 
         let filter = gtk4::FileFilter::new();
         filter.set_name(Some("Fichiers Markdown (*.md)"));

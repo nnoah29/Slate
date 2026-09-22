@@ -28,6 +28,7 @@ fn test_config_serialization() {
     let mut config = AppConfig {
         theme: ThemeMode::Dark,
         font_size: 18.0,
+        save_directory: Some(PathBuf::from("/home/test/notes")),
         ..Default::default()
     };
     config.add_recent_file(PathBuf::from("/tmp/note.md"));
@@ -37,6 +38,10 @@ fn test_config_serialization() {
 
     assert_eq!(deserialized.theme, ThemeMode::Dark);
     assert_eq!(deserialized.font_size, 18.0);
+    assert_eq!(
+        deserialized.save_directory,
+        Some(PathBuf::from("/home/test/notes"))
+    );
     assert_eq!(deserialized.recent_files.len(), 1);
 }
 
@@ -82,4 +87,15 @@ fn test_config_load_save_roundtrip() {
 
     let loaded = AppConfig::load_from(&config_path).expect("load");
     assert_eq!(loaded.font_size, 16.0);
+}
+
+#[test]
+fn test_config_save_directory_default_and_resolved() {
+    let mut config = AppConfig::default();
+    assert!(config.save_directory.is_some());
+
+    config.save_directory = Some(PathBuf::from("~/Notes"));
+    let resolved = config.resolved_save_directory();
+    assert!(resolved.is_some());
+    assert!(resolved.unwrap().ends_with("Notes"));
 }
