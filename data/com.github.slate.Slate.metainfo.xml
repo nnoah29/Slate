@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>com.github.slate.Slate</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Slate</name>
+  <summary>Native, distraction-free Markdown notes application</summary>
+  <description>
+    <p>
+      Slate is an extremely sober, fast, and local-first Markdown notes application designed for Linux desktop.
+      It gives the feeling of opening a fresh sheet of paper: no permanent sidebars, no navigation bars, no accounts, and no sync requirements.
+    </p>
+    <p>Features:</p>
+    <ul>
+      <li>Instant startup and distraction-free writing</li>
+      <li>Raw Markdown storage (.md) with zero proprietary metadata</li>
+      <li>Comprehensive keyboard formatting shortcuts</li>
+      <li>Native GTK 4 Markdown preview mode</li>
+      <li>Atomic saving with data loss protection</li>
+      <li>Automatic external modification detection</li>
+      <li>Light, Dark, and System theme integration</li>
+    </ul>
+  </description>
+  <url type="homepage">https://github.com/slate-notes/slate</url>
+  <url type="bugtracker">https://github.com/slate-notes/slate/issues</url>
+  <developer_name>Slate Contributors</developer_name>
+  <provides>
+    <binary>slate</binary>
+    <mediatype>text/markdown</mediatype>
+  </provides>
+  <releases>
+    <release version="0.1.0" date="2026-09-22">
+      <description>
+        <p>Initial release of Slate Markdown notes application.</p>
+      </description>
+    </release>
+  </releases>
+  <content_rating type="oars-1.1"/>
+</component>

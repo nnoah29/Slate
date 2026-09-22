@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#353538"/>
+      <stop offset="100%" stop-color="#242426"/>
+    </linearGradient>
+    <linearGradient id="paper-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f0f0f4"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+
+  <!-- Base Slate Board -->
+  <rect x="16" y="14" width="96" height="100" rx="14" fill="url(#bg-grad)" filter="url(#shadow)"/>
+  <rect x="16" y="14" width="96" height="100" rx="14" fill="none" stroke="#48484c" stroke-width="1.5"/>
+
+  <!-- Paper Sheet -->
+  <path d="M 28 26 L 80 26 L 100 46 L 100 102 L 28 102 Z" fill="url(#paper-grad)" filter="url(#shadow)"/>
+  
+  <!-- Folded Corner -->
+  <path d="M 80 26 L 80 46 L 100 46 Z" fill="#d8d8de"/>
+  <path d="M 80 46 L 100 46" stroke="#c0c0c6" stroke-width="1"/>
+
+  <!-- Markdown Lines / Content -->
+  <!-- Header line -->
+  <rect x="36" y="38" width="34" height="4.5" rx="2" fill="#3584e4"/>
+
+  <!-- Body lines -->
+  <rect x="36" y="52" width="56" height="3" rx="1.5" fill="#77767b"/>
+  <rect x="36" y="60" width="50" height="3" rx="1.5" fill="#77767b"/>
+  <rect x="36" y="68" width="54" height="3" rx="1.5" fill="#77767b"/>
+
+  <!-- Bullet points -->
+  <circle cx="39" cy="79.5" r="2" fill="#3584e4"/>
+  <rect x="45" y="78" width="45" height="3" rx="1.5" fill="#77767b"/>
+
+  <circle cx="39" cy="88.5" r="2" fill="#3584e4"/>
+  <rect x="45" y="87" width="38" height="3" rx="1.5" fill="#77767b"/>
+</svg>

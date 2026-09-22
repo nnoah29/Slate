@@ -1,0 +1,18 @@
+[Desktop Entry]
+Name=Slate
+GenericName=Markdown Notes Editor
+Comment=Distraction-free native Markdown notes application
+Exec=slate %U
+Icon=com.github.slate.Slate
+Terminal=false
+Type=Application
+Categories=Office;TextEditor;Utility;
+MimeType=text/markdown;text/x-markdown;
+Keywords=Markdown;Notes;Text;Editor;Minimalist;Write;
+StartupNotify=true
+StartupWMClass=com.github.slate.Slate
+Actions=New;
+
+[Desktop Action New]
+Name=New Note
+Exec=slate --new
