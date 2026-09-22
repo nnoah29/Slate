@@ -33,3 +33,8 @@ Bienvenue dans la documentation officielle de **Slate**, l'application de prise 
   - Configuration de la fenêtre flottante
   - Rendu sans bordure et centrage
   - Flou (blur) et translucidité coordonnés avec Kitty
+
+- [5. Publication AUR & Installation avec yay (`aur_publishing.md`)](aur_publishing.md)
+  - Configuration du compte AUR et clés SSH
+  - Publication du paquet `slate-git`
+  - Installation immédiate avec `yay -S slate-git`

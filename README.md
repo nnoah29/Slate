@@ -9,6 +9,7 @@ Application de notes Markdown native Linux, sobre, rapide et axée sur l'écritu
 > - [Guide de configuration (`~/.config/Slate/config.json`)](docs/configuration.md)
 > - [Tableau des raccourcis clavier](docs/shortcuts.md)
 > - [Intégration Hyprland & Wayland](docs/hyprland.md)
+> - [Installation avec `yay` & publication AUR](docs/aur_publishing.md)
 
 ---
 
