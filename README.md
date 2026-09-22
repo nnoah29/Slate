@@ -4,6 +4,12 @@ Application de notes Markdown native Linux, sobre, rapide et axée sur l'écritu
 
 ![Slate Icon](data/icons/hicolor/scalable/apps/com.github.slate.Slate.svg)
 
+> 📖 **Documentation complète** : Retrouvez les guides détaillés dans le dossier [`docs/`](docs/) :
+> - [Guide d'utilisation](docs/usage.md)
+> - [Guide de configuration (`~/.config/Slate/config.json`)](docs/configuration.md)
+> - [Tableau des raccourcis clavier](docs/shortcuts.md)
+> - [Intégration Hyprland & Wayland](docs/hyprland.md)
+
 ---
 
 ## 1. Vision & Philosophie
