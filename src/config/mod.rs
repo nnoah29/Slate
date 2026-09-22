@@ -11,7 +11,7 @@
 ** User configuration management, XDG file persistence, and validation.
 */
 
-use directories::ProjectDirs;
+use directories::BaseDirs;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -95,43 +95,28 @@ impl Default for AppConfig {
 }
 
 impl AppConfig {
+    pub fn config_dir_path() -> Option<PathBuf> {
+        BaseDirs::new().map(|base| base.config_dir().join("Slate"))
+    }
+
+    pub fn legacy_config_file_path() -> Option<PathBuf> {
+        BaseDirs::new().map(|base| base.config_dir().join("slate").join("config.json"))
+    }
+
     pub fn config_file_path() -> Option<PathBuf> {
-        ProjectDirs::from("com.github.slate", "Slate", "slate")
-            .map(|proj| proj.config_dir().join("config.json"))
+        Self::config_dir_path().map(|dir| dir.join("config.json"))
     }
 
-    pub fn load() -> Self {
-        let Some(path) = Self::config_file_path() else {
-            return Self::default();
-        };
-
-        if !path.exists() {
-            return Self::default();
-        }
-
-        match fs::read_to_string(&path) {
-            Ok(content) => match serde_json::from_str::<AppConfig>(&content) {
-                Ok(mut config) => {
-                    config.validate();
-                    config
-                }
-                Err(err) => {
-                    tracing::warn!("Failed to parse config file: {err}. Using defaults.");
-                    Self::default()
-                }
-            },
-            Err(err) => {
-                tracing::warn!("Failed to read config file: {err}. Using defaults.");
-                Self::default()
-            }
-        }
+    pub fn load_from(path: &Path) -> Result<Self, String> {
+        let content =
+            fs::read_to_string(path).map_err(|e| format!("Failed to read config file: {e}"))?;
+        let mut config: AppConfig = serde_json::from_str(&content)
+            .map_err(|e| format!("Failed to parse config file: {e}"))?;
+        config.validate();
+        Ok(config)
     }
 
-    pub fn save(&self) -> Result<(), String> {
-        let Some(path) = Self::config_file_path() else {
-            return Err("Unable to determine config directory".into());
-        };
-
+    pub fn save_to(&self, path: &Path) -> Result<(), String> {
         if let Some(parent) = path.parent()
             && let Err(err) = fs::create_dir_all(parent)
         {
@@ -140,9 +125,40 @@ impl AppConfig {
 
         let json = serde_json::to_string_pretty(self)
             .map_err(|e| format!("Failed to serialize config: {e}"))?;
-
-        fs::write(&path, json).map_err(|e| format!("Failed to write config file: {e}"))?;
+        fs::write(path, json).map_err(|e| format!("Failed to write config file: {e}"))?;
         Ok(())
+    }
+
+    pub fn load() -> Self {
+        let Some(path) = Self::config_file_path() else {
+            return Self::default();
+        };
+
+        if path.exists() {
+            return Self::load_from(&path).unwrap_or_else(|err| {
+                tracing::warn!("{err}. Using defaults.");
+                Self::default()
+            });
+        }
+
+        if let Some(legacy) = Self::legacy_config_file_path()
+            && legacy.exists()
+        {
+            let config = Self::load_from(&legacy).unwrap_or_default();
+            let _ = config.save();
+            return config;
+        }
+
+        let config = Self::default();
+        let _ = config.save();
+        config
+    }
+
+    pub fn save(&self) -> Result<(), String> {
+        let Some(path) = Self::config_file_path() else {
+            return Err("Unable to determine config directory".into());
+        };
+        self.save_to(&path)
     }
 
     pub fn validate(&mut self) {
