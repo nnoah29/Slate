@@ -21,6 +21,16 @@ pub const DEFAULT_FONT_SIZE: f64 = 12.0;
 pub const MIN_FONT_SIZE: f64 = 8.0;
 pub const MAX_FONT_SIZE: f64 = 48.0;
 pub const MAX_RECENT_FILES: usize = 20;
+pub const DEFAULT_OPACITY: f64 = 0.5;
+pub const DEFAULT_BLUR: f64 = 0.0;
+
+fn default_opacity() -> f64 {
+    DEFAULT_OPACITY
+}
+
+fn default_blur() -> f64 {
+    DEFAULT_BLUR
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum ThemeMode {
@@ -64,6 +74,7 @@ impl AutoSaveInterval {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
 pub struct AppConfig {
     pub theme: ThemeMode,
     pub font_size: f64,
@@ -74,6 +85,15 @@ pub struct AppConfig {
     pub is_maximized: bool,
     #[serde(default)]
     pub save_directory: Option<PathBuf>,
+    #[serde(
+        default = "default_blur",
+        alias = "background_blur",
+        alias = "blur_degree",
+        alias = "blur_radius"
+    )]
+    pub blur: f64,
+    #[serde(default = "default_opacity", alias = "background_opacity")]
+    pub opacity: f64,
     #[serde(default)]
     pub recent_files: Vec<PathBuf>,
     #[serde(default)]
@@ -91,6 +111,8 @@ impl Default for AppConfig {
             window_height: 338,
             is_maximized: false,
             save_directory: BaseDirs::new().map(|b| b.home_dir().to_path_buf()),
+            blur: DEFAULT_BLUR,
+            opacity: DEFAULT_OPACITY,
             recent_files: Vec::new(),
             custom_shortcuts: HashMap::new(),
         }
@@ -176,6 +198,8 @@ impl AppConfig {
         self.font_size = self.font_size.clamp(MIN_FONT_SIZE, MAX_FONT_SIZE);
         self.window_width = self.window_width.max(320);
         self.window_height = self.window_height.max(240);
+        self.blur = self.blur.clamp(0.0, 100.0);
+        self.opacity = self.opacity.clamp(0.0, 1.0);
         if self.recent_files.len() > MAX_RECENT_FILES {
             self.recent_files.truncate(MAX_RECENT_FILES);
         }

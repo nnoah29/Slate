@@ -23,17 +23,7 @@ use std::rc::Rc;
 
 pub const APP_ID: &str = "com.github.slate.Slate";
 
-const CUSTOM_CSS: &str = "
-window, window.background, .background {
-    background-color: rgba(39, 38, 38, 0.5);
-    background: rgba(39, 38, 38, 0.5);
-    color: #cdd6f4;
-    border-radius: 12px;
-    border: none;
-    box-shadow: none;
-    outline: none;
-}
-
+const CUSTOM_CSS_BASE: &str = "
 scrolledwindow, scrolledwindow viewport, viewport, stack, .view {
     background-color: transparent;
     background: transparent;
@@ -86,6 +76,27 @@ textview text selection {
 }
 ";
 
+pub fn generate_custom_css(opacity: f64, blur: f64) -> String {
+    let backdrop = if blur > 0.0 {
+        format!("    backdrop-filter: blur({blur:.1}px);\n")
+    } else {
+        String::new()
+    };
+    format!(
+        "{CUSTOM_CSS_BASE}
+window, window.background, .background {{
+    background-color: rgba(39, 38, 38, {opacity:.2});
+    background: rgba(39, 38, 38, {opacity:.2});
+    color: #cdd6f4;
+    border-radius: 12px;
+    border: none;
+    box-shadow: none;
+    outline: none;
+{backdrop}}}
+"
+    )
+}
+
 pub struct SlateApp {
     app: libadwaita::Application,
     active_window: Rc<RefCell<Option<Rc<SlateWindow>>>>,
@@ -132,7 +143,8 @@ impl SlateApp {
 
             if let Some(display) = gdk::Display::default() {
                 let provider = gtk4::CssProvider::new();
-                provider.load_from_string(CUSTOM_CSS);
+                let css = generate_custom_css(config.opacity, config.blur);
+                provider.load_from_string(&css);
                 gtk4::style_context_add_provider_for_display(
                     &display,
                     &provider,
