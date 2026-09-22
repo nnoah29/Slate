@@ -2,7 +2,7 @@
 
 Application de notes Markdown native Linux, sobre, rapide et axée sur l'écriture ("feuille de papier").
 
-![Slate Icon](data/icons/hicolor/scalable/apps/com.github.slate.Slate.svg)
+![Slate Icon](data/icons/hicolor/scalable/apps/com.nnoah29.slate.svg)
 
 > 📖 **Documentation complète** : Retrouvez les guides détaillés dans le dossier [`docs/`](docs/) :
 > - [Guide d'utilisation](docs/usage.md)

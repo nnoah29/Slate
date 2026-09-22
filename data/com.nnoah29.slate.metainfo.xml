@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
-  <id>com.github.slate.Slate</id>
+  <id>com.nnoah29.slate</id>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>MIT</project_license>
   <name>Slate</name>
@@ -21,8 +21,8 @@
       <li>Light, Dark, and System theme integration</li>
     </ul>
   </description>
-  <url type="homepage">https://github.com/slate-notes/slate</url>
-  <url type="bugtracker">https://github.com/slate-notes/slate/issues</url>
+  <url type="homepage">https://github.com/nnoah29/Slate</url>
+  <url type="bugtracker">https://github.com/nnoah29/Slate/issues</url>
   <developer_name>Slate Contributors</developer_name>
   <provides>
     <binary>slate</binary>

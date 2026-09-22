@@ -11,11 +11,11 @@ Pour que Slate s'affiche toujours comme une note flottante, épinglée et sans b
 ### Configuration Hyprland (format classique `hyprland.conf`)
 ```ini
 # Slate : note flottante, centrée/épinglée, sans bordure
-windowrulev2 = float, class:^(com\.github\.slate\.Slate|slate)$
-windowrulev2 = size 515 338, class:^(com\.github\.slate\.Slate|slate)$
-windowrulev2 = pin, class:^(com\.github\.slate\.Slate|slate)$
-windowrulev2 = noborder, class:^(com\.github\.slate\.Slate|slate)$
-windowrulev2 = nodim, class:^(com\.github\.slate\.Slate|slate)$
+windowrulev2 = float, class:^(com\.nnoah29\.slate|slate)$
+windowrulev2 = size 515 338, class:^(com\.nnoah29\.slate|slate)$
+windowrulev2 = pin, class:^(com\.nnoah29\.slate|slate)$
+windowrulev2 = noborder, class:^(com\.nnoah29\.slate|slate)$
+windowrulev2 = nodim, class:^(com\.nnoah29\.slate|slate)$
 ```
 
 ### Configuration Hyprland (format Lua / Imperative dots)
@@ -23,7 +23,7 @@ Si vous utilisez une configuration modulaire Hyprland en Lua (ex: dans `~/.confi
 
 ```lua
 hl.window_rule({
-    match = { class = "^(com\\.github\\.slate\\.Slate|slate)$" },
+    match = { class = "^(com\\.nnoah29\\.slate|slate)$" },
     float = true,
     size = "515 338",
     pin = true,

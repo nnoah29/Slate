@@ -3,14 +3,14 @@ Name=Slate
 GenericName=Markdown Notes Editor
 Comment=Distraction-free native Markdown notes application
 Exec=slate %U
-Icon=com.github.slate.Slate
+Icon=com.nnoah29.slate
 Terminal=false
 Type=Application
 Categories=Office;TextEditor;Utility;
 MimeType=text/markdown;text/x-markdown;
 Keywords=Markdown;Notes;Text;Editor;Minimalist;Write;
 StartupNotify=true
-StartupWMClass=com.github.slate.Slate
+StartupWMClass=com.nnoah29.slate
 Actions=New;
 
 [Desktop Action New]

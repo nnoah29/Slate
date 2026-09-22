@@ -21,7 +21,7 @@ use std::cell::RefCell;
 use std::path::PathBuf;
 use std::rc::Rc;
 
-pub const APP_ID: &str = "com.github.slate.Slate";
+pub const APP_ID: &str = "com.nnoah29.slate";
 
 const CUSTOM_CSS_BASE: &str = "
 scrolledwindow, scrolledwindow viewport, viewport, stack, .view {
