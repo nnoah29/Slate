@@ -55,6 +55,13 @@ textview text selection {
     border: 1px solid #313244;
 }
 
+.title-1 { color: #89b4fa; }
+.title-2 { color: #a6e3a1; }
+.title-3 { color: #f9e2af; }
+.title-4 { color: #fab387; }
+.heading { color: #f5c2e7; }
+.caption-heading { color: #94e2d5; }
+
 .table-view {
     margin: 4px 0;
 }
@@ -66,6 +73,15 @@ textview text selection {
 
 .dim-label {
     color: #a6adc8;
+}
+
+tt {
+    color: #eba0ac;
+    background-color: rgba(30, 30, 46, 0.5);
+}
+
+a {
+    color: #89b4fa;
 }
 ";
 
