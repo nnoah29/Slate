@@ -48,7 +48,7 @@ impl EditorBuffer {
 
     pub fn text(&self) -> String {
         let (start, end) = self.buffer.bounds();
-        self.buffer.text(&start, &end, false).to_string()
+        self.buffer.text(&start, &end, true).to_string()
     }
 
     pub fn set_text(&self, text: &str) {
