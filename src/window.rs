@@ -161,9 +161,9 @@ impl SlateWindow {
             self.load_file(&path);
         } else {
             self.update_title();
+            self.stack.set_visible_child_name("editor");
+            self.editor_view.grab_focus();
         }
-
-        self.editor_view.grab_focus();
     }
 
     fn setup_buffer_tracking(self: &Rc<Self>) {
@@ -599,8 +599,13 @@ impl SlateWindow {
                 }
                 self.editor_view.buffer().set_text(&content);
                 self.state.borrow_mut().is_reloading = false;
+                
+                // Switch to Preview mode (Read-Only) by default for opened files
+                self.preview_view.render_markdown(&content);
+                self.stack.set_visible_child_name("preview");
+                
                 self.update_title();
-                self.editor_view.grab_focus();
+                self.preview_view.widget().grab_focus();
             }
             Err(e) => {
                 self.show_toast(&format!("Impossible d'ouvrir le fichier : {e}"));
@@ -616,6 +621,10 @@ impl SlateWindow {
         }
         self.editor_view.buffer().clear();
         self.state.borrow_mut().is_reloading = false;
+        
+        // Ensure Editor mode is active for new files
+        self.stack.set_visible_child_name("editor");
+        
         self.update_title();
         self.editor_view.grab_focus();
     }
