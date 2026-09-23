@@ -261,6 +261,16 @@ impl SlateWindow {
             Action::ZoomOut => self.change_zoom(-1.5),
             Action::ZoomReset => self.reset_zoom(),
             Action::ToggleConceal => self.toggle_conceal(),
+            Action::ToggleWrapMode => {
+                self.editor_view.toggle_wrap_mode();
+                let is_wrapped = self.editor_view.view().wrap_mode() != gtk4::WrapMode::None;
+                let msg = if is_wrapped {
+                    "Retour à la ligne automatique : Activé"
+                } else {
+                    "Retour à la ligne automatique : Désactivé"
+                };
+                self.show_toast(msg);
+            }
         }
     }
 

@@ -42,6 +42,7 @@ pub enum Action {
     ZoomOut,
     ZoomReset,
     ToggleConceal,
+    ToggleWrapMode,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -97,6 +98,7 @@ impl ShortcutManager {
 
         self.bind(Key::e, true, false, false, Action::TogglePreview);
         self.bind(Key::l, true, false, false, Action::ToggleConceal);
+        self.bind(Key::z, false, false, true, Action::ToggleWrapMode);
 
         self.bind(Key::f, true, false, false, Action::Search);
         self.bind(Key::h, true, false, false, Action::Replace);

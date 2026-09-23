@@ -42,7 +42,7 @@ impl EditorView {
         view.set_indent_width(4);
         view.set_tab_width(4);
         view.set_insert_spaces_instead_of_tabs(true);
-        view.set_wrap_mode(gtk4::WrapMode::WordChar);
+        view.set_wrap_mode(gtk4::WrapMode::None);
         view.set_left_margin(10);
         view.set_right_margin(10);
         view.set_top_margin(10);
@@ -107,6 +107,15 @@ impl EditorView {
 
     pub fn grab_focus(&self) {
         self.view.grab_focus();
+    }
+
+    pub fn toggle_wrap_mode(&self) {
+        let current = self.view.wrap_mode();
+        if current == gtk4::WrapMode::None {
+            self.view.set_wrap_mode(gtk4::WrapMode::WordChar);
+        } else {
+            self.view.set_wrap_mode(gtk4::WrapMode::None);
+        }
     }
 }
 
