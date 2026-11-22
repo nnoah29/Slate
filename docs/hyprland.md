@@ -36,11 +36,11 @@ hl.window_rule({
 
 Slate fournit un rendu translucide coordonné avec le terminal Kitty :
 - **Couleur de fond** : `rgba(39, 38, 38, opacity)` (code hex `#272626`).
-- **Opacité** : configurable via `"opacity": 0.5` dans `~/.config/Slate/config.json`.
+- **Opacité** : configurable via `"opacity": 0.1` dans `~/.config/Slate/config.json`.
 - **Flou (Blur)** :
   - Le paramètre `"blur"` de `config.json` (`0` = désactivé, défaut `20`) génère un `backdrop-filter: blur(Xpx)`. GTK 4.24 le traduit en requête `ext-background-effect-v1` auprès du compositeur ; Hyprland applique alors son propre flou (réglé par `decoration.blur`) derrière la fenêtre. Le nombre de pixels n'a donc pas d'effet sur l'intensité.
   - Sans cette requête, Hyprland ne floute pas les fenêtres GTK, même translucides (contrairement à Kitty, flouté nativement).
-  - Pour un rendu proche de Kitty, utilisez `"opacity": 0.5` : avec une opacité élevée (`0.9`), le flou est à peine visible.
+  - Pour un rendu proche de Kitty, utilisez `"opacity": 0.1` (défaut) : avec une opacité élevée (`0.9`), le flou est à peine visible.
 
 ---
 

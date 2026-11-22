@@ -27,7 +27,7 @@ Voici un fichier `config.json` complet avec les valeurs par défaut :
   "is_maximized": false,
   "save_directory": "/home/nnoah",
   "blur": 20.0,
-  "opacity": 0.5,
+  "opacity": 0.1,
   "recent_files": [
     "/home/nnoah/ok.md"
   ],
@@ -71,7 +71,7 @@ Voici un fichier `config.json` complet avec les valeurs par défaut :
 - **Valeurs** : `0.0` à `100.0`.
   - `0.0` : Désactive le flou.
   - `20.0` (défaut) ou toute valeur positive : active le flou.
-  - Le flou n'est visible que si le fond est translucide : avec `opacity` à `0.9` il reste discret, vers `0.5` (comme Kitty) il est net.
+  - Le flou n'est visible que si le fond est translucide : avec `opacity` à `0.9` il reste discret, vers `0.1` (équivalent de Kitty) il est net.
 - **Exemple** :
   ```json
   "blur": 20.0
@@ -81,7 +81,7 @@ Voici un fichier `config.json` complet avec les valeurs par défaut :
 - **Description** : Niveau d'opacité du fond de la fenêtre.
 - **Alias acceptés** : `"background_opacity"`.
 - **Valeurs** : `0.0` (entièrement transparent) à `1.0` (opaque).
-- **Valeur par défaut** : `0.5` (reproduit fidèlement la translucidité de Kitty).
+- **Valeur par défaut** : `0.1` (rendu visuellement équivalent à Kitty avec `background_opacity 0.5`, car le fond de Slate s'ajoute au flou et à l'opacité de Hyprland).
 - **Exemple** :
   ```json
   "opacity": 0.65

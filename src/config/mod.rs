@@ -21,7 +21,7 @@ pub const DEFAULT_FONT_SIZE: f64 = 12.0;
 pub const MIN_FONT_SIZE: f64 = 8.0;
 pub const MAX_FONT_SIZE: f64 = 48.0;
 pub const MAX_RECENT_FILES: usize = 20;
-pub const DEFAULT_OPACITY: f64 = 0.5;
+pub const DEFAULT_OPACITY: f64 = 0.1;
 pub const DEFAULT_BLUR: f64 = 20.0;
 
 fn default_opacity() -> f64 {
