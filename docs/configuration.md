@@ -26,7 +26,7 @@ Voici un fichier `config.json` complet avec les valeurs par défaut :
   "window_height": 338,
   "is_maximized": false,
   "save_directory": "/home/nnoah",
-  "blur": 0.0,
+  "blur": 20.0,
   "opacity": 0.5,
   "recent_files": [
     "/home/nnoah/ok.md"
@@ -66,14 +66,15 @@ Voici un fichier `config.json` complet avec les valeurs par défaut :
   ```
 
 ### `blur` *(nombre flottant)*
-- **Description** : Degré de flou d'arrière-plan en pixels appliqué via `backdrop-filter`.
+- **Description** : Active le flou d'arrière-plan derrière la fenêtre. GTK 4.24 traduit le `backdrop-filter` en demande de flou au compositeur (protocole Wayland `ext-background-effect-v1`) : la valeur sert d'interrupteur (`0` = désactivé, `> 0` = activé), et c'est le compositeur qui fixe l'intensité réelle (sous Hyprland : `decoration.blur`).
 - **Alias acceptés** : `"background_blur"`, `"blur_degree"`, `"blur_radius"`.
 - **Valeurs** : `0.0` à `100.0`.
-  - `0.0` : Désactive le flou (identique au paramètre `background_blur 0` de Kitty).
-  - `10.0` ou plus : Floute doucement les éléments situés derrière la fenêtre de Slate.
+  - `0.0` : Désactive le flou.
+  - `20.0` (défaut) ou toute valeur positive : active le flou.
+  - Le flou n'est visible que si le fond est translucide : avec `opacity` à `0.9` il reste discret, vers `0.5` (comme Kitty) il est net.
 - **Exemple** :
   ```json
-  "blur": 15.0
+  "blur": 20.0
   ```
 
 ### `opacity` *(nombre flottant)*
