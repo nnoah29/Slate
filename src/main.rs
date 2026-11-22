@@ -13,6 +13,7 @@
 
 mod app;
 mod config;
+mod discovery;
 mod document;
 mod editor;
 mod preview;

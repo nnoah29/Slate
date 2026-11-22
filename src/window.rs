@@ -79,6 +79,8 @@ impl SlateWindow {
 
         let font_size = config.font_size;
         let font_family = config.font_family.clone();
+        let mut shortcut_mgr = ShortcutManager::new();
+        shortcut_mgr.apply_custom(&config.custom_shortcuts);
 
         let state = Rc::new(RefCell::new(WindowState {
             document: Document::new_untitled(),
@@ -128,7 +130,7 @@ impl SlateWindow {
             search_bar,
             stack,
             toast_overlay,
-            shortcut_mgr: ShortcutManager::new(),
+            shortcut_mgr,
         });
 
         slate_win.init(initial_path);
@@ -188,11 +190,14 @@ impl SlateWindow {
         let key_controller = gtk4::EventControllerKey::new();
         let this = Rc::downgrade(self);
 
-        key_controller.connect_key_pressed(move |_, keyval, _, state| {
+        key_controller.connect_key_pressed(move |_, keyval, keycode, state| {
             let Some(this) = this.upgrade() else {
                 return glib::Propagation::Proceed;
             };
-            if let Some(action) = this.shortcut_mgr.match_action(keyval, state) {
+            if let Some(action) = this
+                .shortcut_mgr
+                .match_action_with_keycode(keyval, keycode, state)
+            {
                 this.handle_action(action);
                 return glib::Propagation::Stop;
             }
@@ -259,6 +264,16 @@ impl SlateWindow {
                 crate::editor::formatting::apply_unindent(buffer.upcast_ref());
             }
             Action::ZoomIn => self.change_zoom(1.5),
+            Action::Heading(level) => {
+                crate::editor::formatting::apply_heading_level(buffer.upcast_ref(), level);
+            }
+            Action::ShowShortcuts => {
+                crate::discovery::shortcuts_dialog::present_shortcuts_dialog(
+                    &self.window,
+                    &self.shortcut_mgr,
+                );
+            }
+            Action::CommandPalette => self.open_command_palette(),
             Action::ZoomOut => self.change_zoom(-1.5),
             Action::ZoomReset => self.reset_zoom(),
             Action::ToggleConceal => self.toggle_conceal(),
@@ -273,6 +288,20 @@ impl SlateWindow {
                 self.show_toast(msg);
             }
         }
+    }
+
+    fn open_command_palette(self: &Rc<Self>) {
+        let this = Rc::downgrade(self);
+        let on_run: Rc<dyn Fn(Action)> = Rc::new(move |action| {
+            if let Some(this) = this.upgrade() {
+                this.handle_action(action);
+            }
+        });
+        crate::discovery::palette::present_command_palette(
+            &self.window,
+            &self.shortcut_mgr,
+            on_run,
+        );
     }
 
     fn toggle_conceal(&self) {

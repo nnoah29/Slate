@@ -24,6 +24,8 @@
 
 ## 2. Raccourcis Clavier
 
+> `F1` affiche tous les raccourcis, `Ctrl+P` ouvre la palette de commandes.
+
 ### Système & Fichiers
 
 | Raccourci | Action |
@@ -42,7 +44,7 @@
 | Raccourci | Action |
 |-----------|--------|
 | `Ctrl+E` | Basculer entre Édition brute et Prévisualisation Markdown native |
-| `Ctrl+L` | Activer / Désactiver le masquage dynamique des balises (mode conceal) |
+| `Ctrl+Shift+M` | Activer / Désactiver le masquage dynamique des balises (mode conceal) |
 | `Ctrl++` / `Ctrl+=` | Augmenter la taille de la police |
 | `Ctrl+-` | Diminuer la taille de la police |
 | `Ctrl+0` | Réinitialiser le zoom |
@@ -62,9 +64,9 @@
 | `Ctrl+I` | Italique | `*texte*` |
 | `Ctrl+K` | Lien | `[texte](url)` |
 | `Ctrl+Shift+X` | Barré | `~~texte~~` |
-| `Ctrl+Shift+H` | Titre | Cycle `# `, `## `, `### `, `#### `, etc. |
-| `Ctrl+Shift+8` | Liste à puces | `- texte` |
-| `Ctrl+Shift+7` | Liste numérotée | `1. texte` |
+| `Ctrl+Alt+1` … `6` | Titre de niveau 1 à 6 | `# ` … `###### ` |
+| `Ctrl+Shift+L` | Liste à puces | `- texte` |
+| `Ctrl+Shift+N` | Liste numérotée | `1. texte` |
 | `Ctrl+Shift+C` | Code | `` `code` `` ou bloc ```` ``` ```` |
 | `Ctrl+Shift+Q` | Citation | `> texte` |
 | `Tab` | Indenter | 4 espaces |

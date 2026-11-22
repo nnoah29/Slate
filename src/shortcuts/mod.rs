@@ -5,14 +5,21 @@
 ** | '_ \ | | | |     | '_ \ | '_ \  / _ \  / _` || '_ \   / /  \__, |
 ** | |_) || |_| |     | | | || | | || (_) || (_| || | | | / /_    / /
 ** |_.__/  \__, |     |_| |_||_| |_| \___/  \__,_||_| |_||____|  /_/
-**          __/ |     on 2026-09-22.
+**          __/ |     on 2026-11-22.
 **         |___/
+**
 **
 ** Centralized keyboard shortcut registry and event matching.
 */
 
+mod accelerator;
+mod catalog;
+mod custom;
+mod defaults;
+
+pub use catalog::all_actions;
+
 use gtk4::gdk::{self, Key};
-use std::collections::HashMap;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Action {
@@ -32,6 +39,7 @@ pub enum Action {
     FormatLink,
     FormatStrikethrough,
     FormatHeading,
+    Heading(u8),
     FormatBulletList,
     FormatNumberedList,
     FormatCode,
@@ -43,6 +51,8 @@ pub enum Action {
     ZoomReset,
     ToggleConceal,
     ToggleWrapMode,
+    ShowShortcuts,
+    CommandPalette,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -71,94 +81,106 @@ impl KeyBinding {
         let key_match = self.key == keyval || self.key.to_lower() == keyval.to_lower();
         key_match && self.ctrl == has_ctrl && self.shift == has_shift && self.alt == has_alt
     }
+
+    /// Nom GTK du raccourci (`<Control><Shift>l`), utilisé pour l'affichage.
+    pub fn accelerator_name(&self) -> String {
+        let name = self.key.to_lower().name().map(|n| n.to_string());
+        let key_name = name.unwrap_or_default();
+        accelerator::format_accelerator(self.ctrl, self.shift, self.alt, &key_name)
+    }
+}
+
+/// Raccourci lié à une touche physique, donc indépendant de la disposition du clavier.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct KeycodeBinding {
+    pub code: u32,
+    pub ctrl: bool,
+    pub shift: bool,
+    pub alt: bool,
 }
 
 pub struct ShortcutManager {
-    bindings: HashMap<KeyBinding, Action>,
+    pub(crate) bindings: Vec<(KeyBinding, Action)>,
+    pub(crate) keycode_bindings: Vec<(KeycodeBinding, Action)>,
 }
 
 impl ShortcutManager {
     pub fn new() -> Self {
         let mut mgr = Self {
-            bindings: HashMap::new(),
+            bindings: Vec::new(),
+            keycode_bindings: Vec::new(),
         };
         mgr.register_defaults();
         mgr
     }
 
-    pub fn register_defaults(&mut self) {
-        self.bind(Key::s, true, false, false, Action::Save);
-        self.bind(Key::S, true, true, false, Action::SaveAs);
-        self.bind(Key::n, true, false, false, Action::New);
-        self.bind(Key::o, true, false, false, Action::Open);
-        self.bind(Key::w, true, false, false, Action::Close);
-        self.bind(Key::q, true, false, false, Action::Quit);
-        self.bind(Key::z, true, false, false, Action::Undo);
-        self.bind(Key::Z, true, true, false, Action::Redo);
-
-        self.bind(Key::e, true, false, false, Action::TogglePreview);
-        self.bind(Key::l, true, false, false, Action::ToggleConceal);
-        self.bind(Key::z, false, false, true, Action::ToggleWrapMode);
-
-        self.bind(Key::f, true, false, false, Action::Search);
-        self.bind(Key::h, true, false, false, Action::Replace);
-
-        self.bind(Key::b, true, false, false, Action::FormatBold);
-        self.bind(Key::i, true, false, false, Action::FormatItalic);
-        self.bind(Key::k, true, false, false, Action::FormatLink);
-        self.bind(Key::X, true, true, false, Action::FormatStrikethrough);
-        self.bind(Key::x, true, true, false, Action::FormatStrikethrough);
-        self.bind(Key::H, true, true, false, Action::FormatHeading);
-        self.bind(Key::C, true, true, false, Action::FormatCode);
-        self.bind(Key::c, true, true, false, Action::FormatCode);
-        self.bind(Key::Q, true, true, false, Action::FormatBlockquote);
-        self.bind(Key::q, true, true, false, Action::FormatBlockquote);
-
-        self.bind(Key::_8, true, true, false, Action::FormatBulletList);
-        self.bind(Key::asterisk, true, true, false, Action::FormatBulletList);
-        self.bind(Key::_7, true, true, false, Action::FormatNumberedList);
-        self.bind(
-            Key::ampersand,
-            true,
-            true,
-            false,
-            Action::FormatNumberedList,
-        );
-
-        self.bind(Key::Tab, false, false, false, Action::Indent);
-        self.bind(Key::ISO_Left_Tab, false, true, false, Action::Unindent);
-        self.bind(Key::Tab, false, true, false, Action::Unindent);
-
-        self.bind(Key::plus, true, false, false, Action::ZoomIn);
-        self.bind(Key::equal, true, false, false, Action::ZoomIn);
-        self.bind(Key::minus, true, false, false, Action::ZoomOut);
-        self.bind(Key::_0, true, false, false, Action::ZoomReset);
-    }
-
     pub fn bind(&mut self, key: Key, ctrl: bool, shift: bool, alt: bool, action: Action) {
         let binding = KeyBinding::new(key, ctrl, shift, alt);
-        self.bindings.insert(binding, action);
+        match self.bindings.iter_mut().find(|(b, _)| *b == binding) {
+            Some(existing) => existing.1 = action,
+            None => self.bindings.push((binding, action)),
+        }
     }
 
     pub fn match_action(&self, keyval: Key, modifier_state: gdk::ModifierType) -> Option<Action> {
-        for (binding, action) in &self.bindings {
-            if binding.matches(keyval, modifier_state) {
-                return Some(*action);
-            }
+        self.bindings
+            .iter()
+            .find(|(binding, _)| binding.matches(keyval, modifier_state))
+            .map(|(_, action)| *action)
+    }
+
+    /// Cherche d'abord un raccourci par touche physique, puis par caractère produit.
+    pub fn match_action_with_keycode(
+        &self,
+        keyval: Key,
+        keycode: u32,
+        modifier_state: gdk::ModifierType,
+    ) -> Option<Action> {
+        let ctrl = modifier_state.contains(gdk::ModifierType::CONTROL_MASK);
+        let shift = modifier_state.contains(gdk::ModifierType::SHIFT_MASK);
+        let alt = modifier_state.contains(gdk::ModifierType::ALT_MASK);
+        let by_code = self
+            .keycode_bindings
+            .iter()
+            .find(|(b, _)| b.code == keycode && b.ctrl == ctrl && b.shift == shift && b.alt == alt);
+        by_code
+            .map(|(_, action)| *action)
+            .or_else(|| self.match_action(keyval, modifier_state))
+    }
+
+    /// Premier raccourci de l'action, au format GTK, pour l'afficher à l'utilisateur.
+    pub fn accelerator_for(&self, action: Action) -> Option<String> {
+        let by_key = self.bindings.iter().find(|(_, a)| *a == action);
+        if let Some((binding, _)) = by_key {
+            return Some(binding.accelerator_name());
         }
-        None
+        let (binding, _) = self.keycode_bindings.iter().find(|(_, a)| *a == action)?;
+        Some(binding.accelerator_name())
+    }
+
+    pub(crate) fn remove_action(&mut self, action: Action) {
+        self.bindings.retain(|(_, a)| *a != action);
+        self.keycode_bindings.retain(|(_, a)| *a != action);
     }
 
     #[allow(dead_code)]
     pub fn check_conflicts(&self) -> Vec<String> {
         let mut conflicts = Vec::new();
-        let mut seen = HashMap::new();
-        for (binding, action) in &self.bindings {
-            if let Some(prev) = seen.insert(binding, action) {
-                conflicts.push(format!("Conflit entre {:?} et {:?}", prev, action));
+        for (i, (binding, action)) in self.bindings.iter().enumerate() {
+            let duplicate = self.bindings[i + 1..].iter().find(|(b, _)| b == binding);
+            if let Some((_, other)) = duplicate {
+                conflicts.push(format!("Conflit entre {action:?} et {other:?}"));
             }
         }
         conflicts
+    }
+}
+
+impl KeycodeBinding {
+    /// Nom d'affichage de type GTK, la touche étant le chiffre de la rangée haute.
+    pub(crate) fn accelerator_name(&self) -> String {
+        let digit = (self.code.saturating_sub(9) % 10).to_string();
+        accelerator::format_accelerator(self.ctrl, self.shift, self.alt, &digit)
     }
 }
 
