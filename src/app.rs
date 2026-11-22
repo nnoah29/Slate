@@ -64,11 +64,23 @@ textview text selection {
 
 .table-view {
     margin: 4px 0;
+    border: 1px solid #45475a;
+    border-radius: 8px;
 }
 
 .table-cell {
-    padding: 6px 12px;
-    border: 1px solid #313244;
+    padding: 10px 16px;
+    border-right: 1px solid #313244;
+    border-bottom: 1px solid #313244;
+}
+
+.table-head {
+    background-color: alpha(#89b4fa, 0.15);
+    border-bottom: 2px solid #45475a;
+}
+
+.table-row-even {
+    background-color: alpha(#cdd6f4, 0.04);
 }
 
 .dim-label {
