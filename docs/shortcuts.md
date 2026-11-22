@@ -8,7 +8,7 @@ Slate est optimisé pour une utilisation 100% au clavier, sans jamais avoir beso
 
 | Raccourci | Action | Description |
 |-----------|--------|-------------|
-| **`Ctrl + S`** | Sauvegarder | Sauvegarde immédiate. Si le document n'a pas de nom, ouvre la boîte de dialogue d'enregistrement. |
+| **`Ctrl + S`** | Sauvegarder | Sauvegarde immédiate. Une note sans nom est créée directement dans `save_directory` (nom tiré de son premier titre), sans dialogue. |
 | **`Ctrl + Shift + S`** | Sauvegarder sous... | Ouvre le sélecteur de fichier dans `save_directory`. |
 | **`Ctrl + N`** | Nouvelle note | Crée un document vierge (invite de sauvegarde si des modifications sont non enregistrées). |
 | **`Ctrl + O`** | Ouvrir un document | Ouvre le sélecteur de fichier Markdown dans `save_directory`. |

@@ -130,7 +130,7 @@ impl Default for AppConfig {
             window_width: 515,
             window_height: 338,
             is_maximized: false,
-            save_directory: BaseDirs::new().map(|b| b.home_dir().to_path_buf()),
+            save_directory: BaseDirs::new().map(|b| b.home_dir().join("Notes")),
             blur: DEFAULT_BLUR,
             opacity: DEFAULT_OPACITY,
             recent_files: Vec::new(),
@@ -146,6 +146,15 @@ impl AppConfig {
             return BaseDirs::new().map(|b| b.home_dir().join(stripped));
         }
         Some(path.clone())
+    }
+
+    /// Dossier des notes ; le dossier personnel nu (ancien défaut) équivaut à `~/Notes`.
+    pub fn notes_directory(&self) -> Option<PathBuf> {
+        let home = BaseDirs::new().map(|b| b.home_dir().to_path_buf())?;
+        match self.resolved_save_directory() {
+            Some(dir) if dir != home => Some(dir),
+            _ => Some(home.join("Notes")),
+        }
     }
 
     pub fn config_dir_path() -> Option<PathBuf> {

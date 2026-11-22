@@ -134,3 +134,32 @@ fn test_custom_css_generation() {
     assert!(css_blur.contains("font-family: 'Fira Code', monospace;"));
     assert!(css_blur.contains("font-size: 14.0pt;"));
 }
+
+#[test]
+fn test_notes_directory_defaults_to_dedicated_folder() {
+    let config = AppConfig::default();
+    let dir = config.notes_directory().expect("dir");
+    assert!(dir.ends_with("Notes"));
+}
+
+#[test]
+fn test_notes_directory_replaces_bare_home_of_old_configs() {
+    let config = AppConfig {
+        save_directory: directories::BaseDirs::new().map(|b| b.home_dir().to_path_buf()),
+        ..AppConfig::default()
+    };
+    let dir = config.notes_directory().expect("dir");
+    assert!(dir.ends_with("Notes"));
+}
+
+#[test]
+fn test_notes_directory_keeps_custom_folder() {
+    let config = AppConfig {
+        save_directory: Some(PathBuf::from("/home/test/mes-notes")),
+        ..AppConfig::default()
+    };
+    assert_eq!(
+        config.notes_directory(),
+        Some(PathBuf::from("/home/test/mes-notes"))
+    );
+}
