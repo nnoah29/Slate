@@ -5,6 +5,7 @@
 </div>
 
 > 📖 **Documentation complète** : Retrouvez les guides détaillés dans le dossier [`docs/`](docs/) :
+> - [Dictée vocale locale](docs/voice.md)
 > - [Guide d'utilisation](docs/usage.md)
 > - [Guide de configuration (`~/.config/Slate/config.json`)](docs/configuration.md)
 > - [Tableau des raccourcis clavier](docs/shortcuts.md)
@@ -24,7 +25,7 @@
 
 ## 2. Raccourcis Clavier
 
-> `F1` affiche tous les raccourcis, `Ctrl+P` ouvre la palette de commandes.
+> `F1` affiche tous les raccourcis, `Ctrl+P` ouvre la palette de commandes. `Ctrl+D` (ou Espace maintenu) lance la dictée vocale locale.
 
 ### Système & Fichiers
 

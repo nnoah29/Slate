@@ -26,8 +26,8 @@ Chaque tâche : tests d'abord (boîte noire), un commit par tâche, `clippy -D w
 ## Lot 3 — Gestes et interface
 
 - ☑ **T9 Espace maintenu** : machine à états (appui court, maintien, autre touche, modificateur, répétition).
-- ◐ **T10 Branchement fenêtre** : `Ctrl+D`, palette, dialogue de confirmation du modèle, barre de niveau, config `voice_*`, messages d'erreur.
-- ☐ **T11 Documentation et vérification réelle** : `docs/voice.md`, README, attribution Kroko ; essai à la voix.
+- ☑ **T10 Branchement fenêtre** : `Ctrl+D`, palette, dialogue de confirmation du modèle, barre de niveau, config `voice_*`, messages d'erreur.
+- ☑ **T11 Documentation et vérification réelle** : `docs/voice.md`, README, attribution Kroko ; essai à la voix.
 
 ## Journal
 
@@ -43,3 +43,5 @@ Chaque tâche : tests d'abord (boîte noire), un commit par tâche, `clippy -D w
 - T10 : **bug trouvé à l'essai réel** — double emprunt `RefCell` dans le gestionnaire d'Espace (le `match` gardait l'emprunt pendant l'appel de `arm_hold_timer`) ; un panic dans un rappel GTK fait abandonner toute l'application (SIGABRT). Corrigé. Leçon : ne jamais garder un `borrow_mut()` dans le scrutin d'un `match`.
 - T10 : `parecord` ignore le micro par défaut modifié sous PipeWire (flux restauré sur le vrai micro) → option `voice_device` ajoutée (utile aussi avec plusieurs micros). Essai de bout en bout par un puits nul PulseAudio + le vrai enregistrement : phrases reconnues mot à mot, validées avec une espace, deux phrases enchaînées sans espace parasite.
 - T10 : un test aléatoire de l'insertion (3 000 séquences) ne trouve aucun doublon d'espaces. Des suites d'espaces vues une fois avec le **vrai micro** (bruit ambiant) n'ont pas été reproduites : à surveiller.
+- T10/T11 : essai de bout en bout dans l'application réelle (micro virtuel + enregistrement du modèle) : `Ctrl+D` continu, **Espace maintenu** (appui, 900 ms, parole, relâchement : parecord s'arrête et le texte est enregistré), appui court = espace (`x  y`). Micro virtuel retiré et micro par défaut restauré après chaque essai.
+- Reste ouvert : essai à la **voix de l'utilisateur** sur le vrai micro ; suites d'espaces vues une fois avec le bruit ambiant (non reproduites) ; confirmation de licence Kroko ; annulation du téléchargement.
