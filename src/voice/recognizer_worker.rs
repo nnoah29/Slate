@@ -59,6 +59,12 @@ impl RecognizerWorker {
         self.commands.send(command).is_ok()
     }
 
+    /// Demande la libération du modèle sans attendre ; rend le fil pour qu'on puisse le joindre plus tard.
+    pub fn release(mut self) -> Option<JoinHandle<()>> {
+        let _ = self.commands.send(WorkerCommand::Release);
+        self.handle.take()
+    }
+
     /// Libère le modèle puis attend la fin du fil.
     pub fn shutdown(mut self) {
         let _ = self.commands.send(WorkerCommand::Release);

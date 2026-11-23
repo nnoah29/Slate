@@ -24,7 +24,7 @@ pub fn normalize_transcript(raw: &str) -> String {
 pub fn next_events(last: &str, current: &str, endpoint: bool) -> (Vec<RecognizerEvent>, String) {
     let mut events = Vec::new();
     let text = normalize_transcript(current);
-    if current != last {
+    if text != normalize_transcript(last) {
         events.push(RecognizerEvent::Partial(text.clone()));
     }
     if !endpoint {

@@ -62,6 +62,7 @@ pub enum RecognizerEvent {
 /// Raison pour laquelle une dictée n'a pas démarré ou s'est arrêtée.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum VoiceProblem {
+    Busy,
     ModelMissing,
     MicrophoneMissing,
     MicrophoneUnavailable(String),
@@ -71,6 +72,7 @@ pub enum VoiceProblem {
 impl fmt::Display for VoiceProblem {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
+            Self::Busy => write!(f, "Une dictée est déjà en cours."),
             Self::ModelMissing => write!(f, "Le modèle de dictée n'est pas installé."),
             Self::MicrophoneMissing => write!(f, "Micro introuvable (parecord est requis)."),
             Self::MicrophoneUnavailable(why) => write!(f, "Micro indisponible : {why}"),
