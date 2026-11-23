@@ -26,7 +26,7 @@ Chaque tâche : tests d'abord (boîte noire), un commit par tâche, `clippy -D w
 ## Lot 3 — Gestes et interface
 
 - ☑ **T9 Espace maintenu** : machine à états (appui court, maintien, autre touche, modificateur, répétition).
-- ☐ **T10 Branchement fenêtre** : `Ctrl+D`, palette, dialogue de confirmation du modèle, barre de niveau, config `voice_*`, messages d'erreur.
+- ◐ **T10 Branchement fenêtre** : `Ctrl+D`, palette, dialogue de confirmation du modèle, barre de niveau, config `voice_*`, messages d'erreur.
 - ☐ **T11 Documentation et vérification réelle** : `docs/voice.md`, README, attribution Kroko ; essai à la voix.
 
 ## Journal
@@ -40,3 +40,6 @@ Chaque tâche : tests d'abord (boîte noire), un commit par tâche, `clippy -D w
 - T7 : un événement provisoire vide (silence) n'est plus émis (comparaison sur le texte normalisé).
 - T8 : insertion portée depuis Mira (12 tests, dont accents : positions en caractères). Adaptateur `TextBuffer` à écrire avec T10.
 - T9 : machine à états pure ; la touche reste « possédée » après l'écriture de l'espace sur une autre touche (état `Flushed`) pour que les répétitions de la touche tenue n'écrivent rien. Le contrôleur d'événements devra être en phase *capture* (le `TextView` insère l'espace sinon avant nous).
+- T10 : **bug trouvé à l'essai réel** — double emprunt `RefCell` dans le gestionnaire d'Espace (le `match` gardait l'emprunt pendant l'appel de `arm_hold_timer`) ; un panic dans un rappel GTK fait abandonner toute l'application (SIGABRT). Corrigé. Leçon : ne jamais garder un `borrow_mut()` dans le scrutin d'un `match`.
+- T10 : `parecord` ignore le micro par défaut modifié sous PipeWire (flux restauré sur le vrai micro) → option `voice_device` ajoutée (utile aussi avec plusieurs micros). Essai de bout en bout par un puits nul PulseAudio + le vrai enregistrement : phrases reconnues mot à mot, validées avec une espace, deux phrases enchaînées sans espace parasite.
+- T10 : un test aléatoire de l'insertion (3 000 séquences) ne trouve aucun doublon d'espaces. Des suites d'espaces vues une fois avec le **vrai micro** (bruit ambiant) n'ont pas été reproduites : à surveiller.

@@ -66,6 +66,7 @@ impl RecognizerWorker {
     }
 
     /// Libère le modèle puis attend la fin du fil.
+    #[allow(dead_code)]
     pub fn shutdown(mut self) {
         let _ = self.commands.send(WorkerCommand::Release);
         if let Some(handle) = self.handle.take() {

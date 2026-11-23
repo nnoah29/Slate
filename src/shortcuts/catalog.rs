@@ -23,6 +23,12 @@ const ENTRIES: &[(Action, &str, &str, &str)] = &[
     (Action::Quit, "quit", "Quitter", "Fichier"),
     (Action::Undo, "undo", "Annuler", "Édition"),
     (Action::Redo, "redo", "Rétablir", "Édition"),
+    (
+        Action::ToggleDictation,
+        "toggle_dictation",
+        "Dictée vocale",
+        "Édition",
+    ),
     (Action::Search, "search", "Rechercher", "Édition"),
     (
         Action::Replace,

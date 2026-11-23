@@ -17,6 +17,7 @@ use super::types::VoiceLanguage;
 /// Un modèle téléchargeable : archive à récupérer et fichiers à en garder.
 #[derive(Debug, Clone, Copy)]
 pub struct ModelEntry {
+    #[allow(dead_code)]
     pub language: VoiceLanguage,
     pub url: &'static str,
     pub archive_bytes: u64,

@@ -56,6 +56,7 @@ impl ModelStore {
     }
 
     /// Supprime le modèle d'une langue, sans toucher aux autres.
+    #[allow(dead_code)]
     pub fn remove(&self, language: VoiceLanguage) -> io::Result<()> {
         let dir = self.model_dir(language);
         if dir.exists() {

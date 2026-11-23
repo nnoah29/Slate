@@ -11,6 +11,7 @@
 ** User configuration management, XDG file persistence, and validation.
 */
 
+use crate::voice::types::VoiceLanguage;
 use directories::BaseDirs;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -23,6 +24,8 @@ pub const MAX_FONT_SIZE: f64 = 48.0;
 pub const MAX_RECENT_FILES: usize = 20;
 pub const DEFAULT_OPACITY: f64 = 0.1;
 pub const DEFAULT_BLUR: f64 = 20.0;
+pub const DEFAULT_VOICE_HOLD_MS: u64 = 400;
+pub const DEFAULT_VOICE_KEEP_MINUTES: u32 = 3;
 
 fn default_opacity() -> f64 {
     DEFAULT_OPACITY
@@ -118,6 +121,11 @@ pub struct AppConfig {
     pub recent_files: Vec<PathBuf>,
     #[serde(default)]
     pub custom_shortcuts: HashMap<String, String>,
+    pub voice_language: VoiceLanguage,
+    pub voice_push_to_talk: bool,
+    pub voice_hold_ms: u64,
+    pub voice_keep_minutes: u32,
+    pub voice_device: Option<String>,
 }
 
 impl Default for AppConfig {
@@ -135,6 +143,11 @@ impl Default for AppConfig {
             opacity: DEFAULT_OPACITY,
             recent_files: Vec::new(),
             custom_shortcuts: HashMap::new(),
+            voice_language: VoiceLanguage::Fr,
+            voice_push_to_talk: true,
+            voice_hold_ms: DEFAULT_VOICE_HOLD_MS,
+            voice_keep_minutes: DEFAULT_VOICE_KEEP_MINUTES,
+            voice_device: None,
         }
     }
 }
@@ -229,6 +242,8 @@ impl AppConfig {
         self.window_height = self.window_height.max(240);
         self.blur = self.blur.clamp(0.0, 100.0);
         self.opacity = self.opacity.clamp(0.0, 1.0);
+        self.voice_hold_ms = self.voice_hold_ms.clamp(200, 1000);
+        self.voice_keep_minutes = self.voice_keep_minutes.min(30);
         if self.recent_files.len() > MAX_RECENT_FILES {
             self.recent_files.truncate(MAX_RECENT_FILES);
         }

@@ -39,15 +39,23 @@ pub trait AudioSource {
     fn stop(&mut self);
 }
 
-/// Micro réel : `parecord`.
+/// Micro réel : `parecord`, sur le périphérique par défaut ou un périphérique nommé.
 #[derive(Default)]
 pub struct ParecordSource {
+    device: Option<String>,
     mic: Option<Microphone>,
+}
+
+impl ParecordSource {
+    /// Source sur un périphérique donné (`None` : micro par défaut du système).
+    pub fn new(device: Option<String>) -> Self {
+        Self { device, mic: None }
+    }
 }
 
 impl AudioSource for ParecordSource {
     fn start(&mut self, out: Sender<MicMessage>) -> Result<(), VoiceProblem> {
-        self.mic = Some(Microphone::start(out)?);
+        self.mic = Some(Microphone::start(self.device.as_deref(), out)?);
         Ok(())
     }
 
@@ -156,6 +164,14 @@ impl VoiceEngine {
         while self.mic_rx.try_recv().is_ok() {}
     }
 
+    /// Fermeture de l'application : annule tout et attend la libération des modèles.
+    pub fn shutdown(&mut self) {
+        self.cancel();
+        for handle in self.retiring.drain(..) {
+            let _ = handle.join();
+        }
+    }
+
     /// Libère le modèle chargé (garde expirée, annulation, changement de langue).
     pub fn release_model(&mut self) {
         self.retiring.retain(|handle| !handle.is_finished());
@@ -170,11 +186,13 @@ impl VoiceEngine {
     }
 
     /// Dit si aucune dictée n'est en cours.
+    #[allow(dead_code)]
     pub fn is_idle(&self) -> bool {
         self.phase == Phase::Idle
     }
 
     /// Dit si un modèle est chargé (ou en cours de chargement).
+    #[allow(dead_code)]
     pub fn model_loaded(&self) -> bool {
         self.worker.is_some()
     }
@@ -185,6 +203,7 @@ impl VoiceEngine {
     }
 
     /// Remplace la source audio (tests, changement de périphérique).
+    #[allow(dead_code)]
     pub fn replace_source(&mut self, source: Box<dyn AudioSource>) {
         self.source = source;
     }

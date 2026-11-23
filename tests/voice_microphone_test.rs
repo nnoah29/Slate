@@ -48,3 +48,17 @@ fn test_stop_kills_the_capture_process_immediately() {
     assert!(began.elapsed() < Duration::from_secs(3));
     assert_eq!(rx.recv_timeout(WAIT), Ok(MicMessage::Ended));
 }
+
+#[test]
+fn test_capture_arguments_default_to_the_system_microphone() {
+    let args = slate::voice::microphone::parecord_args(None);
+    assert!(args.contains(&"--rate=16000".to_string()));
+    assert!(args.contains(&"--channels=1".to_string()));
+    assert!(!args.iter().any(|a| a.starts_with("--device")));
+}
+
+#[test]
+fn test_capture_arguments_can_target_a_named_device() {
+    let args = slate::voice::microphone::parecord_args(Some("alsa_input.usb-micro"));
+    assert!(args.contains(&"--device=alsa_input.usb-micro".to_string()));
+}

@@ -51,6 +51,7 @@ pub enum Action {
     ZoomReset,
     ToggleConceal,
     ToggleWrapMode,
+    ToggleDictation,
     ShowShortcuts,
     CommandPalette,
 }

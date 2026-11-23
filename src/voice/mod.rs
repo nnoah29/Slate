@@ -14,13 +14,17 @@
 
 pub mod audio_level;
 pub mod backlog;
+pub mod buffer_target;
+pub mod controller;
 pub mod engine;
 mod engine_poll;
+pub mod indicator;
 pub mod inserter;
 pub mod install_error;
 pub mod microphone;
 pub mod model_archive;
 pub mod model_catalog;
+pub mod model_dialog;
 pub mod model_download;
 pub mod model_store;
 pub mod pcm;

@@ -24,6 +24,7 @@ pub enum VoiceLanguage {
     En,
 }
 
+#[allow(dead_code)]
 impl VoiceLanguage {
     /// Code court de la langue (`fr`, `en`).
     pub fn code(&self) -> &'static str {

@@ -27,6 +27,13 @@ const PARECORD_ARGS: [&str; 5] = [
     "--latency-msec=60",
 ];
 
+/// Arguments de `parecord` : PCM 16 kHz mono, sur le micro par défaut ou sur un périphérique nommé.
+pub fn parecord_args(device: Option<&str>) -> Vec<String> {
+    let mut args: Vec<String> = PARECORD_ARGS.iter().map(|a| (*a).to_string()).collect();
+    args.extend(device.map(|name| format!("--device={name}")));
+    args
+}
+
 /// Messages du micro : paquets d'échantillons dans [-1, 1], puis la fin du flux.
 #[derive(Debug, PartialEq)]
 pub enum MicMessage {
@@ -41,9 +48,11 @@ pub struct Microphone {
 }
 
 impl Microphone {
-    /// Ouvre le micro par défaut avec `parecord`.
-    pub fn start(out: Sender<MicMessage>) -> Result<Self, VoiceProblem> {
-        Self::start_with("parecord", &PARECORD_ARGS, out)
+    /// Ouvre le micro (par défaut, ou le périphérique nommé) avec `parecord`.
+    pub fn start(device: Option<&str>, out: Sender<MicMessage>) -> Result<Self, VoiceProblem> {
+        let args = parecord_args(device);
+        let refs: Vec<&str> = args.iter().map(String::as_str).collect();
+        Self::start_with("parecord", &refs, out)
     }
 
     /// Lance un programme de capture quelconque qui écrit du PCM 16 bits mono 16 kHz sur sa sortie.

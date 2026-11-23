@@ -19,13 +19,18 @@ use crate::search::SearchReplaceBar;
 use crate::shortcuts::{Action, ShortcutManager};
 use crate::storage::naming::{note_file_stem, unique_note_path};
 use crate::storage::{check_external_modification, generate_diff, read_file, write_file_atomic};
+use crate::voice::controller::DictationController;
+use crate::voice::engine::{ParecordSource, VoiceEngine};
+use crate::voice::indicator::DictationIndicator;
+use crate::voice::model_store::ModelStore;
+use crate::voice::push_to_talk::PushToTalk;
 
 use gtk4::gdk;
 use gtk4::gio;
 use gtk4::glib;
 use gtk4::prelude::*;
 use libadwaita::prelude::*;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::time::SystemTime;
@@ -49,14 +54,18 @@ pub enum PendingAction {
 }
 
 pub struct SlateWindow {
-    window: libadwaita::ApplicationWindow,
-    state: Rc<RefCell<WindowState>>,
-    editor_view: Rc<EditorView>,
+    pub(crate) window: libadwaita::ApplicationWindow,
+    pub(crate) state: Rc<RefCell<WindowState>>,
+    pub(crate) editor_view: Rc<EditorView>,
     preview_view: Rc<PreviewView>,
     search_bar: Rc<SearchReplaceBar>,
-    stack: gtk4::Stack,
-    toast_overlay: libadwaita::ToastOverlay,
+    pub(crate) stack: gtk4::Stack,
+    pub(crate) toast_overlay: libadwaita::ToastOverlay,
     shortcut_mgr: ShortcutManager,
+    pub(crate) dictation: Rc<DictationController>,
+    pub(crate) model_store: ModelStore,
+    pub(crate) ptt: RefCell<PushToTalk>,
+    pub(crate) ptt_generation: Cell<u32>,
 }
 
 impl SlateWindow {
@@ -79,6 +88,12 @@ impl SlateWindow {
 
         let font_size = config.font_size;
         let font_family = config.font_family.clone();
+        let (voice_language, voice_keep, voice_hold, voice_device) = (
+            config.voice_language,
+            config.voice_keep_minutes,
+            config.voice_hold_ms,
+            config.voice_device.clone(),
+        );
         let mut shortcut_mgr = ShortcutManager::new();
         shortcut_mgr.apply_custom(&config.custom_shortcuts);
 
@@ -112,8 +127,13 @@ impl SlateWindow {
             .vexpand(true)
             .build();
 
+        let indicator = Rc::new(DictationIndicator::new());
+        let overlay = gtk4::Overlay::builder().hexpand(true).vexpand(true).build();
+        overlay.set_child(Some(&stack));
+        overlay.add_overlay(indicator.widget());
+
         main_box.append(search_bar.widget());
-        main_box.append(&stack);
+        main_box.append(&overlay);
 
         let toast_overlay = libadwaita::ToastOverlay::new();
         toast_overlay.set_child(Some(&main_box));
@@ -121,6 +141,27 @@ impl SlateWindow {
         let window_handle = gtk4::WindowHandle::builder().child(&toast_overlay).build();
 
         window.set_content(Some(&window_handle));
+
+        let model_store = ModelStore::new(
+            ModelStore::default_root().unwrap_or_else(|| PathBuf::from("voice-models")),
+        );
+        let toast_target = toast_overlay.clone();
+        let toast: Rc<dyn Fn(&str)> = Rc::new(move |text: &str| {
+            let toast = libadwaita::Toast::builder().title(text).timeout(4).build();
+            toast_target.add_toast(toast);
+        });
+        let engine = VoiceEngine::new(
+            model_store.clone(),
+            Box::new(ParecordSource::new(voice_device)),
+        );
+        let dictation = DictationController::new(
+            engine,
+            editor_view.buffer().buffer().clone().upcast(),
+            indicator,
+            toast,
+            voice_language,
+            voice_keep,
+        );
 
         let slate_win = Rc::new(Self {
             window,
@@ -131,6 +172,10 @@ impl SlateWindow {
             stack,
             toast_overlay,
             shortcut_mgr,
+            dictation,
+            model_store,
+            ptt: RefCell::new(PushToTalk::new(voice_hold)),
+            ptt_generation: Cell::new(0),
         });
 
         slate_win.init(initial_path);
@@ -151,6 +196,8 @@ impl SlateWindow {
         self.setup_buffer_tracking();
 
         self.setup_shortcuts();
+
+        self.setup_dictation_keys();
 
         self.setup_drag_and_drop();
 
@@ -274,6 +321,7 @@ impl SlateWindow {
                 );
             }
             Action::CommandPalette => self.open_command_palette(),
+            Action::ToggleDictation => self.toggle_dictation(),
             Action::ZoomOut => self.change_zoom(-1.5),
             Action::ZoomReset => self.reset_zoom(),
             Action::ToggleConceal => self.toggle_conceal(),
@@ -333,6 +381,7 @@ impl SlateWindow {
     }
 
     pub fn toggle_preview(&self) {
+        self.dictation.cancel();
         let current = self.stack.visible_child_name();
         if current.as_deref() == Some("editor") {
             let text = self.editor_view.buffer().text();
@@ -379,6 +428,7 @@ impl SlateWindow {
                     return glib::Propagation::Stop;
                 }
                 this.save_window_geometry();
+                this.dictation.shutdown();
             }
             glib::Propagation::Proceed
         });
@@ -651,6 +701,7 @@ impl SlateWindow {
     }
 
     pub fn load_file(self: &Rc<Self>, path: &Path) {
+        self.dictation.cancel();
         match read_file(path) {
             Ok((content, mtime)) => {
                 {
@@ -677,6 +728,7 @@ impl SlateWindow {
     }
 
     pub fn new_document(self: &Rc<Self>) {
+        self.dictation.cancel();
         {
             let mut s = self.state.borrow_mut();
             s.is_reloading = true;

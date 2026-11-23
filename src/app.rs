@@ -51,6 +51,17 @@ dialog .background {
     color: #cdd6f4;
 }
 
+.dictation-indicator {
+    background-color: rgba(30, 30, 46, 0.92);
+    color: #cdd6f4;
+    border-radius: 14px;
+    padding: 6px 14px;
+}
+
+.dictation-indicator levelbar block.filled {
+    background-color: #a6e3a1;
+}
+
 .blockquote {
     border-left: 3px solid #89b4fa;
     padding-left: 14px;

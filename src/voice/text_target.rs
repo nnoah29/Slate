@@ -23,12 +23,14 @@ pub trait TextTarget {
 }
 
 /// Cible en mémoire : sert aux tests et à tout champ réduit à une chaîne.
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct StringTarget {
     text: String,
     selection: (usize, usize),
 }
 
+#[allow(dead_code)]
 impl StringTarget {
     /// Texte initial et curseur (fin du texte par défaut).
     pub fn new(text: &str, cursor: Option<usize>) -> Self {
