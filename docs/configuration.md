@@ -40,7 +40,7 @@ Voici un fichier `config.json` complet avec les valeurs par défaut :
 ## 3. Détail des options
 
 ### `save_directory` *(chaîne de caractères)*
-- **Description** : Répertoire par défaut vers lequel s'ouvrent les boîtes de dialogue "Enregistrer sous..." (`Ctrl+Shift+S`) et "Ouvrir un document" (`Ctrl+O`).
+- **Description** : Dossier dédié aux notes (défaut : `~/Notes`). Une nouvelle note y est enregistrée directement par `Ctrl+S` ou l'enregistrement automatique, sans dialogue, sous le nom de son premier titre (`Titre.md`, `Titre (2).md` en cas de doublon, ou `Note AAAA-MM-JJ HH-MM.md` sans titre). Les dialogues "Enregistrer sous..." (`Ctrl+Shift+S`) et "Ouvrir" (`Ctrl+O`) s'y ouvrent aussi. L'ancienne valeur par défaut (le dossier personnel nu) est traitée comme `~/Notes`.
 - **Support du tilde `~`** : Vous pouvez utiliser un chemin absolu comme `"/home/nnoah/Notes"` ou utiliser la notation raccourcie `"~/Notes"`. Slate résoudra automatiquement le chemin absolu.
 - **Exemple** :
   ```json

@@ -17,6 +17,7 @@ use crate::editor::EditorView;
 use crate::preview::PreviewView;
 use crate::search::SearchReplaceBar;
 use crate::shortcuts::{Action, ShortcutManager};
+use crate::storage::naming::{note_file_stem, unique_note_path};
 use crate::storage::{check_external_modification, generate_diff, read_file, write_file_atomic};
 
 use gtk4::gdk;
@@ -482,12 +483,35 @@ impl SlateWindow {
 
         match path {
             Some(p) => self.perform_save_to_path(&p, is_auto),
-            None => {
-                if !is_auto {
-                    self.save_as_dialog();
-                }
-            }
+            None => self.save_new_note_in_notes_dir(is_auto),
         }
+    }
+
+    /// Enregistre une note sans nom dans le dossier dédié, sans ouvrir de dialogue.
+    fn save_new_note_in_notes_dir(self: &Rc<Self>, is_auto: bool) {
+        let text = self.editor_view.buffer().text();
+        if text.trim().is_empty() {
+            if !is_auto {
+                self.show_toast("Note vide : rien à enregistrer.");
+            }
+            return;
+        }
+        if is_auto && text.trim().lines().count() < 2 {
+            return;
+        }
+        let Some(dir) = self.state.borrow().config.notes_directory() else {
+            if !is_auto {
+                self.save_as_dialog();
+            }
+            return;
+        };
+        let stamp = glib::DateTime::now_local()
+            .and_then(|d| d.format("Note %Y-%m-%d %H-%M"))
+            .map(|s| s.to_string())
+            .unwrap_or_else(|_| "Sans titre".to_string());
+        let stem = note_file_stem(&text, &stamp);
+        let path = unique_note_path(&dir, &stem);
+        self.perform_save_to_path(&path, is_auto);
     }
 
     fn perform_save_to_path(self: &Rc<Self>, path: &Path, is_auto: bool) {
@@ -520,7 +544,7 @@ impl SlateWindow {
     }
 
     fn set_dialog_folder(&self, dialog: &gtk4::FileDialog) {
-        let Some(save_dir) = self.state.borrow().config.resolved_save_directory() else {
+        let Some(save_dir) = self.state.borrow().config.notes_directory() else {
             return;
         };
         let file = gio::File::for_path(&save_dir);
@@ -609,11 +633,11 @@ impl SlateWindow {
                 }
                 self.editor_view.buffer().set_text(&content);
                 self.state.borrow_mut().is_reloading = false;
-                
+
                 // Switch to Preview mode (Read-Only) by default for opened files
                 self.preview_view.render_markdown(&content);
                 self.stack.set_visible_child_name("preview");
-                
+
                 self.update_title();
                 self.preview_view.widget().grab_focus();
             }
@@ -631,10 +655,10 @@ impl SlateWindow {
         }
         self.editor_view.buffer().clear();
         self.state.borrow_mut().is_reloading = false;
-        
+
         // Ensure Editor mode is active for new files
         self.stack.set_visible_child_name("editor");
-        
+
         self.update_title();
         self.editor_view.grab_focus();
     }
