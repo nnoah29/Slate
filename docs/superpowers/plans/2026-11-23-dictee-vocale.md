@@ -5,17 +5,17 @@ Chaque tâche : tests d'abord (boîte noire), un commit par tâche, `clippy -D w
 
 ## Lot 1 — Moteur
 
-- ☐ **T1 Dépendances et squelette** : `sherpa-onnx`, `sha2`, `ureq`, `bzip2`, `tar` ; module `voice` ; mesurer le temps de build et le poids du binaire.
+- ☑ **T1 Dépendances et squelette** : `sherpa-onnx`, `sha2`, `ureq`, `bzip2`, `tar` ; module `voice` ; mesurer le temps de build et le poids du binaire.
   Critère : `cargo build` vert.
-- ☐ **T2 Types et PCM** : `VoiceLanguage`, événements, problèmes ; conversion PCM16 → f32 avec octet de reste ; niveau sonore 0–1.
+- ☑ **T2 Types et PCM** : `VoiceLanguage`, événements, problèmes ; conversion PCM16 → f32 avec octet de reste ; niveau sonore 0–1.
   Critères : paquets coupés en octets impairs sans perte ; silence → 0, saturation → 1.
-- ☐ **T3 Catalogue et dossier de modèles** : entrées pinnées FR/EN (URL, taille, SHA-256), `~/.config/Slate/voice-models/`, `is_installed`.
+- ☑ **T3 Catalogue et dossier de modèles** : entrées pinnées FR/EN (URL, taille, SHA-256), `~/.config/Slate/voice-models/`, `is_installed`.
   Critères : dossier sous le répertoire de config de Slate ; installé seulement si les 4 fichiers existent.
-- ☐ **T4 Téléchargement vérifié** : HTTP bloquant, progression, SHA-256 et taille vérifiés, extraction `tar.bz2` des 4 fichiers utiles, jamais d'écriture hors du dossier.
+- ☑ **T4 Téléchargement vérifié** : HTTP bloquant, progression, SHA-256 et taille vérifiés, extraction `tar.bz2` des 4 fichiers utiles, jamais d'écriture hors du dossier.
   Critères (serveur local `127.0.0.1`) : archive valide installée ; empreinte fausse refusée sans rien laisser ; chemin `../` dans l'archive refusé.
-- ☐ **T5 Reconnaisseur** : thread sherpa (init, audio, fin de parole, libération) ; événements `Partial`/`Final`.
+- ☑ **T5 Reconnaisseur** : thread sherpa (init, audio, fin de parole, libération) ; événements `Partial`/`Final`.
   Critères : silence → aucun texte et aucune panique ; avec `SLATE_VOICE_MODELS`, un fichier audio connu donne le texte attendu.
-- ☐ **T6 Micro** : `parecord` en processus enfant, flux f32, arrêt propre, erreurs typées.
+- ☑ **T6 Micro** : `parecord` en processus enfant, flux f32, arrêt propre, erreurs typées.
   Critères : `parecord` introuvable → `MicrophoneMissing` ; arrêt tue le processus.
 - ☐ **T7 Moteur** : orchestration micro → réserve (30 s) → reconnaisseur, arrêt jusqu'au bout, annulation, garde du modèle 3 min.
 
@@ -28,3 +28,11 @@ Chaque tâche : tests d'abord (boîte noire), un commit par tâche, `clippy -D w
 - ☐ **T9 Espace maintenu** : machine à états (appui court, maintien, autre touche, modificateur, répétition).
 - ☐ **T10 Branchement fenêtre** : `Ctrl+D`, palette, dialogue de confirmation du modèle, barre de niveau, config `voice_*`, messages d'erreur.
 - ☐ **T11 Documentation et vérification réelle** : `docs/voice.md`, README, attribution Kroko ; essai à la voix.
+
+## Journal
+
+- 2026-11-23 — T1 : `sherpa-onnx` 2.0.3 en liaison statique ; premier build release complet : **11 min** (téléchargement de la bibliothèque native incluse). `mod voice` retiré de `main.rs` tant que rien ne l'utilise (T10), sinon `dead_code` ; la bibliothèque l'exporte.
+- T4 : bug trouvé par test — le nettoyage d'une installation échouée visait le dossier du catalogue réel au lieu de celui de l'entrée ; corrigé dans le code.
+- T5 : **la bibliothèque C++ de sherpa peut terminer le processus si un fichier de modèle manque** ; `Session::open` vérifie les 4 fichiers avant de charger (`ModelMissing`). Fin de phrase : `enable_endpoint` est **faux par défaut** dans la crate Rust (vrai dans Dart) ; réglé explicitement (2,4 s / 1,2 s / 20 s).
+- T5 : test d'intégration avec le vrai enregistrement `test_wavs/0.wav` du modèle (SLATE_VOICE_WAV_FR) : « demandez », « pays », « faire » reconnus. Une voix espeak-ng ne donne que « Bonjour, » : inutilisable comme fixture.
+- T5/T6 : archive FR téléchargée une fois en dev pour extraire le wav ; SHA-256 et taille identiques au catalogue.
