@@ -114,7 +114,12 @@ Voici un fichier `config.json` complet avec les valeurs par défaut :
 - **Description** : Liste des 20 derniers fichiers ouverts ou sauvegardés, classés par ordre de consultation récente.
 
 ### `custom_shortcuts` *(objet clé/valeur)*
-- **Description** : Permet de réassigner certains raccourcis clavier de base si souhaité.
+- **Description** : Réassigne un raccourci. La clé est l'identifiant de l'action, la valeur un raccourci au format GTK (`<Control>`, `<Shift>`, `<Alt>` suivis du nom de la touche). Le raccourci personnalisé remplace tous les raccourcis par défaut de l'action ; une entrée invalide est ignorée (avertissement dans les logs).
+- **Identifiants** : `save`, `save_as`, `new`, `open`, `close`, `quit`, `undo`, `redo`, `search`, `replace`, `bold`, `italic`, `link`, `strikethrough`, `heading_cycle`, `heading_1` à `heading_6`, `bullet_list`, `numbered_list`, `code`, `blockquote`, `indent`, `unindent`, `toggle_preview`, `toggle_conceal`, `toggle_wrap`, `zoom_in`, `zoom_out`, `zoom_reset`, `shortcuts_help`, `command_palette`.
+- **Exemple** :
+  ```json
+  "custom_shortcuts": { "toggle_preview": "<Control>r", "bold": "<Control><Shift>b" }
+  ```
 
 ---
 

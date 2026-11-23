@@ -42,6 +42,15 @@ textview text selection {
     box-shadow: 0 3px 8px alpha(black, 0.25);
 }
 
+dialog.floating sheet,
+dialog.bottom-sheet sheet,
+dialog sheet.background,
+dialog .background {
+    background-color: rgba(30, 30, 46, 0.96);
+    background: rgba(30, 30, 46, 0.96);
+    color: #cdd6f4;
+}
+
 .blockquote {
     border-left: 3px solid #89b4fa;
     padding-left: 14px;

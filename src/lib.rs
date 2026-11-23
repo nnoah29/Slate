@@ -13,6 +13,7 @@
 
 pub mod app;
 pub mod config;
+pub mod discovery;
 pub mod document;
 pub mod editor;
 pub mod preview;

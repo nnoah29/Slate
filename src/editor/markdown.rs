@@ -69,6 +69,25 @@ pub fn cycle_heading_prefix(line: &str) -> String {
     }
 }
 
+/// Applique un titre de niveau donné à la ligne, ou le retire s'il est déjà de ce niveau.
+pub fn set_heading_level(line: &str, level: u8) -> String {
+    if !(1..=6).contains(&level) {
+        return line.to_string();
+    }
+    let trimmed = line.trim_start();
+    let indent = &line[..line.len() - trimmed.len()];
+    let hashes = trimmed.chars().take_while(|c| *c == '#').count();
+    let body = trimmed[hashes..]
+        .strip_prefix(' ')
+        .unwrap_or(&trimmed[hashes..]);
+    let has_heading = (1..=6).contains(&hashes) && trimmed[hashes..].starts_with(' ');
+    let text = if has_heading { body } else { trimmed };
+    if has_heading && hashes == level as usize {
+        return format!("{indent}{text}");
+    }
+    format!("{indent}{} {text}", "#".repeat(level as usize))
+}
+
 pub fn toggle_bullet_list(line: &str) -> String {
     let trimmed = line.trim_start();
     let indent_len = line.len() - trimmed.len();
