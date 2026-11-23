@@ -21,11 +21,11 @@ Chaque tâche : tests d'abord (boîte noire), un commit par tâche, `clippy -D w
 
 ## Lot 2 — Insertion
 
-- ☐ **T8 Inserter** (logique pure sur chaînes + adaptateur `TextBuffer`) : partiel remplacé, validation avec espace, saisie utilisateur respectée.
+- ☑ **T8 Inserter** (logique pure sur chaînes + adaptateur `TextBuffer`) : partiel remplacé, validation avec espace, saisie utilisateur respectée.
 
 ## Lot 3 — Gestes et interface
 
-- ☐ **T9 Espace maintenu** : machine à états (appui court, maintien, autre touche, modificateur, répétition).
+- ☑ **T9 Espace maintenu** : machine à états (appui court, maintien, autre touche, modificateur, répétition).
 - ☐ **T10 Branchement fenêtre** : `Ctrl+D`, palette, dialogue de confirmation du modèle, barre de niveau, config `voice_*`, messages d'erreur.
 - ☐ **T11 Documentation et vérification réelle** : `docs/voice.md`, README, attribution Kroko ; essai à la voix.
 
@@ -38,3 +38,5 @@ Chaque tâche : tests d'abord (boîte noire), un commit par tâche, `clippy -D w
 - T5/T6 : archive FR téléchargée une fois en dev pour extraire le wav ; SHA-256 et taille identiques au catalogue.
 - T7 : **plantage intermittent (SIGSEGV) à la fin du processus de test** quand un modèle était libéré par un fil détaché ; cause confirmée (30 exécutions sans plantage après correction). Le moteur garde les fils en cours de libération et les joint dans `Drop` : **l'application devra détruire le moteur à la fermeture (T10)**. Canal de messages renouvelé à chaque libération pour qu'aucun texte tardif ne soit livré après une annulation.
 - T7 : un événement provisoire vide (silence) n'est plus émis (comparaison sur le texte normalisé).
+- T8 : insertion portée depuis Mira (12 tests, dont accents : positions en caractères). Adaptateur `TextBuffer` à écrire avec T10.
+- T9 : machine à états pure ; la touche reste « possédée » après l'écriture de l'espace sur une autre touche (état `Flushed`) pour que les répétitions de la touche tenue n'écrivent rien. Le contrôleur d'événements devra être en phase *capture* (le `TextView` insère l'espace sinon avant nous).
