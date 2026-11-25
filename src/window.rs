@@ -13,6 +13,7 @@
 
 use crate::config::AppConfig;
 use crate::document::Document;
+use crate::document::save_prompt::needs_save_prompt;
 use crate::editor::EditorView;
 use crate::preview::PreviewView;
 use crate::search::SearchReplaceBar;
@@ -424,8 +425,7 @@ impl SlateWindow {
         let this = Rc::downgrade(self);
         self.window.connect_close_request(move |_| {
             if let Some(this) = this.upgrade() {
-                let is_dirty = this.state.borrow().document.is_dirty();
-                if is_dirty {
+                if this.has_unsaved_changes() {
                     this.prompt_unsaved_if_dirty(PendingAction::QuitApp);
                     return glib::Propagation::Stop;
                 }
@@ -746,8 +746,19 @@ impl SlateWindow {
         self.editor_view.grab_focus();
     }
 
+    /// Dit s'il y a des modifications à proposer d'enregistrer (une note sans nom vide n'en a pas).
+    fn has_unsaved_changes(&self) -> bool {
+        let state = self.state.borrow();
+        let text = self.editor_view.buffer().text();
+        needs_save_prompt(
+            state.document.is_dirty(),
+            state.document.path().is_some(),
+            &text,
+        )
+    }
+
     fn prompt_unsaved_if_dirty(self: &Rc<Self>, pending: PendingAction) {
-        if !self.state.borrow().document.is_dirty() {
+        if !self.has_unsaved_changes() {
             self.execute_pending_action(pending);
             return;
         }
