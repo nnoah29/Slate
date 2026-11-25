@@ -20,4 +20,6 @@ pub mod preview;
 pub mod search;
 pub mod shortcuts;
 pub mod storage;
+pub mod voice;
 pub mod window;
+pub mod window_dictation;

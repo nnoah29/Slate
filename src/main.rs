@@ -20,7 +20,9 @@ mod preview;
 mod search;
 mod shortcuts;
 mod storage;
+mod voice;
 mod window;
+mod window_dictation;
 
 use app::SlateApp;
 use clap::Parser;

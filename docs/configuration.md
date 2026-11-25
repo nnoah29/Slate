@@ -121,6 +121,10 @@ Voici un fichier `config.json` complet avec les valeurs par défaut :
   "custom_shortcuts": { "toggle_preview": "<Control>r", "bold": "<Control><Shift>b" }
   ```
 
+### Dictée vocale
+
+`voice_language`, `voice_push_to_talk`, `voice_hold_ms`, `voice_keep_minutes` et `voice_device` règlent la dictée : voir [`voice.md`](voice.md).
+
 ---
 
 ## 4. Tolérance et robustesse du JSON

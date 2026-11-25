@@ -9,6 +9,8 @@ Slate est optimisé pour une utilisation 100% au clavier, sans jamais avoir beso
 | Raccourci | Action |
 |-----------|--------|
 | **`F1`** ou **`Ctrl + Shift + ?`** | Fenêtre listant tous les raccourcis, par catégorie, avec recherche |
+| **`Ctrl + D`** | Dictée vocale continue (arrêt au second appui) ; voir `voice.md` |
+| **Espace maintenu** (≥ 400 ms) | Dictée vocale tant que la touche est tenue ; un appui court reste une espace |
 | **`Ctrl + P`** | Palette de commandes : tapez quelques lettres (sans accents ni ordre imposé) pour lancer une action ; son raccourci s'affiche à côté |
 
 Les anciens raccourcis (`Ctrl + L`, `Ctrl + Shift + 7`, `Ctrl + Shift + 8`) restent actifs comme alias. Tous les raccourcis sont modifiables via `custom_shortcuts` (voir `configuration.md`).

@@ -34,6 +34,7 @@ impl ShortcutManager {
         self.bind(Key::q, true, false, false, Action::Quit);
         self.bind(Key::z, true, false, false, Action::Undo);
         self.bind(Key::Z, true, true, false, Action::Redo);
+        self.bind(Key::d, true, false, false, Action::ToggleDictation);
         self.bind(Key::f, true, false, false, Action::Search);
         self.bind(Key::h, true, false, false, Action::Replace);
     }

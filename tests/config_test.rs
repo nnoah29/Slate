@@ -163,3 +163,44 @@ fn test_notes_directory_keeps_custom_folder() {
         Some(PathBuf::from("/home/test/mes-notes"))
     );
 }
+
+#[test]
+fn test_voice_settings_have_sensible_defaults() {
+    let config = AppConfig::default();
+    assert_eq!(
+        config.voice_language,
+        slate::voice::types::VoiceLanguage::Fr
+    );
+    assert!(config.voice_push_to_talk);
+    assert_eq!(config.voice_hold_ms, 400);
+    assert_eq!(config.voice_keep_minutes, 3);
+}
+
+#[test]
+fn test_old_config_without_voice_keys_still_loads() {
+    let config: AppConfig = serde_json::from_str(r#"{"font_size": 14.0}"#).expect("parse");
+    assert_eq!(config.voice_hold_ms, 400);
+    assert!(config.voice_push_to_talk);
+}
+
+#[test]
+fn test_voice_settings_are_read_and_clamped() {
+    let raw = r#"{"voice_language": "en", "voice_push_to_talk": false, "voice_hold_ms": 5000, "voice_keep_minutes": 99}"#;
+    let mut config: AppConfig = serde_json::from_str(raw).expect("parse");
+    config.validate();
+    assert_eq!(
+        config.voice_language,
+        slate::voice::types::VoiceLanguage::En
+    );
+    assert!(!config.voice_push_to_talk);
+    assert_eq!(config.voice_hold_ms, 1000);
+    assert_eq!(config.voice_keep_minutes, 30);
+}
+
+#[test]
+fn test_voice_device_is_optional_and_read_from_json() {
+    assert_eq!(AppConfig::default().voice_device, None);
+    let config: AppConfig =
+        serde_json::from_str(r#"{"voice_device": "alsa_input.usb-micro"}"#).expect("parse");
+    assert_eq!(config.voice_device.as_deref(), Some("alsa_input.usb-micro"));
+}

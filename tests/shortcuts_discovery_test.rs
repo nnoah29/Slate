@@ -138,3 +138,17 @@ fn test_invalid_custom_shortcuts_are_ignored() {
         Some(Action::Save)
     );
 }
+
+#[test]
+fn test_dictation_toggle_shortcut_and_catalog_entry() {
+    let mgr = ShortcutManager::new();
+    assert_eq!(
+        mgr.match_action(Key::d, ModifierType::CONTROL_MASK),
+        Some(Action::ToggleDictation)
+    );
+    assert_eq!(
+        Action::from_id("toggle_dictation"),
+        Some(Action::ToggleDictation)
+    );
+    assert_eq!(Action::ToggleDictation.label(), "Dictée vocale");
+}

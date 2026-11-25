@@ -51,6 +51,16 @@ dialog .background {
     color: #cdd6f4;
 }
 
+.dictation-glyph {
+    color: #a6e3a1;
+    font-family: monospace;
+    font-weight: bold;
+}
+
+.dictation-glyph.preparing {
+    color: #6c7086;
+}
+
 .blockquote {
     border-left: 3px solid #89b4fa;
     padding-left: 14px;
