@@ -127,10 +127,12 @@ impl SlateWindow {
             .vexpand(true)
             .build();
 
-        let indicator = Rc::new(DictationIndicator::new());
         let overlay = gtk4::Overlay::builder().hexpand(true).vexpand(true).build();
         overlay.set_child(Some(&stack));
-        overlay.add_overlay(indicator.widget());
+        let indicator = Rc::new(DictationIndicator::new(
+            &overlay,
+            editor_view.view().upcast_ref(),
+        ));
 
         main_box.append(search_bar.widget());
         main_box.append(&overlay);

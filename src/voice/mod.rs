@@ -19,6 +19,8 @@ pub mod controller;
 pub mod engine;
 mod engine_poll;
 pub mod indicator;
+pub mod indicator_glyph;
+mod indicator_position;
 pub mod inserter;
 pub mod install_error;
 pub mod microphone;

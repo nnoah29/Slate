@@ -9,70 +9,70 @@
 **         |___/
 **
 **
-** Indicateur de dictée : pastille « Préparation… / À l'écoute » et barre de niveau sonore.
+** Indicateur de dictée : un caractère-bloc posé à droite du curseur d'écriture, animé par la voix.
 */
 
 use gtk4::prelude::*;
 
-/// Pastille affichée pendant une dictée, en bas à droite de la note.
+use super::indicator_glyph::glyph_for_level;
+use super::indicator_position::caret_in_overlay;
+
+/// Caractère-bloc suivant le curseur pendant une dictée ; il ne capte jamais les clics.
 pub struct DictationIndicator {
-    root: gtk4::Box,
-    label: gtk4::Label,
-    level: gtk4::LevelBar,
+    glyph: gtk4::Label,
+    overlay: gtk4::Overlay,
+    view: gtk4::TextView,
 }
 
 impl DictationIndicator {
-    /// Crée l'indicateur, masqué ; il ne capte jamais les clics.
-    pub fn new() -> Self {
-        let root = gtk4::Box::builder()
-            .spacing(10)
-            .halign(gtk4::Align::End)
-            .valign(gtk4::Align::End)
-            .margin_end(14)
-            .margin_bottom(14)
+    /// Crée l'indicateur, masqué, en surimpression sur `overlay` ; `view` donne la position du curseur.
+    pub fn new(overlay: &gtk4::Overlay, view: &gtk4::TextView) -> Self {
+        let glyph = gtk4::Label::builder()
+            .halign(gtk4::Align::Start)
+            .valign(gtk4::Align::Start)
             .visible(false)
             .can_target(false)
-            .css_classes(["dictation-indicator"])
+            .css_classes(["dictation-glyph"])
             .build();
-        let label = gtk4::Label::new(None);
-        let level = gtk4::LevelBar::for_interval(0.0, 1.0);
-        level.set_valign(gtk4::Align::Center);
-        level.set_size_request(64, -1);
-        root.append(&label);
-        root.append(&level);
-        Self { root, label, level }
+        overlay.add_overlay(&glyph);
+        Self {
+            glyph,
+            overlay: overlay.clone(),
+            view: view.clone(),
+        }
     }
 
-    /// Widget à placer en surimpression.
-    pub fn widget(&self) -> &gtk4::Box {
-        &self.root
-    }
-
-    /// Micro ouvert, modèle en cours de chargement.
+    /// Micro ouvert, modèle en cours de chargement : bloc bas et atténué.
     pub fn show_preparing(&self) {
-        self.label.set_text("● Préparation…");
-        self.level.set_value(0.0);
-        self.root.set_visible(true);
+        self.glyph.set_text("▁");
+        self.glyph.add_css_class("preparing");
+        self.reposition();
     }
 
-    /// Modèle prêt : la parole est reconnue.
+    /// Modèle prêt : le bloc prend la couleur d'accent.
     pub fn show_listening(&self) {
-        self.label.set_text("● À l'écoute");
+        self.glyph.remove_css_class("preparing");
     }
 
-    /// Niveau sonore de 0 à 1.
+    /// Niveau sonore de 0 à 1 : change la hauteur du bloc et le replace au curseur.
     pub fn set_level(&self, level: f32) {
-        self.level.set_value(f64::from(level.clamp(0.0, 1.0)));
+        self.glyph.set_text(&glyph_for_level(level).to_string());
+        self.reposition();
     }
 
-    /// Masque la pastille.
+    /// Masque le bloc.
     pub fn hide(&self) {
-        self.root.set_visible(false);
+        self.glyph.set_visible(false);
     }
-}
 
-impl Default for DictationIndicator {
-    fn default() -> Self {
-        Self::new()
+    /// Replace le bloc juste après le curseur ; masqué si le curseur n'est pas visible.
+    pub fn reposition(&self) {
+        let Some((x, y)) = caret_in_overlay(&self.view, &self.overlay) else {
+            self.glyph.set_visible(false);
+            return;
+        };
+        self.glyph.set_margin_start(x + 3);
+        self.glyph.set_margin_top(y);
+        self.glyph.set_visible(true);
     }
 }
