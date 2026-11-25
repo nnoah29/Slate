@@ -12,6 +12,7 @@
 */
 
 pub mod metadata;
+pub mod save_prompt;
 pub mod state;
 
 #[allow(unused_imports)]
