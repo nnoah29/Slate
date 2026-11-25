@@ -15,7 +15,7 @@ Conception : `docs/superpowers/specs/2026-11-23-dictee-vocale-design.md` (calqu�
 Espace reste une touche ordinaire avec un modificateur (Ctrl, Alt, Maj, Méta), en mode aperçu, quand le
 champ de texte n'a pas le focus (barre de recherche), sans modèle installé, ou si le réglage est coupé.
 Une autre touche pressée pendant l'attente écrit d'abord l'espace : aucune perte en frappe rapide.
-Pendant la dictée, un caractère-bloc (▁ à █) suit le curseur d'écriture et monte avec ta voix ; il est grisé tant que le modèle charge, puis vert.
+Pendant la dictée, un caractère-bloc (▁ à █) remplace le curseur d'écriture (qui disparaît le temps de la dictée) et monte avec ta voix ; il est grisé tant que le modèle charge, puis vert.
 Toute la dictée est **une seule étape d'annulation** (`Ctrl+Z`).
 
 ## Premier usage : le modèle

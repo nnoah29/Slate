@@ -9,8 +9,10 @@
 **         |___/
 **
 **
-** Indicateur de dictée : un caractère-bloc posé à droite du curseur d'écriture, animé par la voix.
+** Indicateur de dictée : un caractère-bloc posé à la place du curseur d'écriture, animé par la voix.
 */
+
+use std::cell::Cell;
 
 use gtk4::prelude::*;
 
@@ -22,6 +24,7 @@ pub struct DictationIndicator {
     glyph: gtk4::Label,
     overlay: gtk4::Overlay,
     view: gtk4::TextView,
+    caret_was_visible: Cell<bool>,
 }
 
 impl DictationIndicator {
@@ -39,11 +42,14 @@ impl DictationIndicator {
             glyph,
             overlay: overlay.clone(),
             view: view.clone(),
+            caret_was_visible: Cell::new(true),
         }
     }
 
     /// Micro ouvert, modèle en cours de chargement : bloc bas et atténué.
     pub fn show_preparing(&self) {
+        self.caret_was_visible.set(self.view.is_cursor_visible());
+        self.view.set_cursor_visible(false);
         self.glyph.set_text("▁");
         self.glyph.add_css_class("preparing");
         self.reposition();
@@ -60,9 +66,10 @@ impl DictationIndicator {
         self.reposition();
     }
 
-    /// Masque le bloc.
+    /// Masque le bloc et rend son curseur à la zone de texte.
     pub fn hide(&self) {
         self.glyph.set_visible(false);
+        self.view.set_cursor_visible(self.caret_was_visible.get());
     }
 
     /// Replace le bloc juste après le curseur ; masqué si le curseur n'est pas visible.
@@ -71,7 +78,7 @@ impl DictationIndicator {
             self.glyph.set_visible(false);
             return;
         };
-        self.glyph.set_margin_start(x + 3);
+        self.glyph.set_margin_start(x);
         self.glyph.set_margin_top(y);
         self.glyph.set_visible(true);
     }
