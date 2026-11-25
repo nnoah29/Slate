@@ -140,6 +140,10 @@ window, window.background, .background {{
     outline: none;
 {backdrop}}}
 
+window.background {{
+    border: 1px solid alpha(#b4befe, 0.25);
+}}
+
 textview, textview text {{
     font-family: '{family}', monospace;
     font-size: {font_size:.1}pt;
