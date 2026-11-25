@@ -42,6 +42,25 @@ textview text selection {
     box-shadow: 0 3px 8px alpha(black, 0.25);
 }
 
+dialog.floating sheet,
+dialog.bottom-sheet sheet,
+dialog sheet.background,
+dialog .background {
+    background-color: rgba(30, 30, 46, 0.96);
+    background: rgba(30, 30, 46, 0.96);
+    color: #cdd6f4;
+}
+
+.dictation-glyph {
+    color: #a6e3a1;
+    font-family: monospace;
+    font-weight: bold;
+}
+
+.dictation-glyph.preparing {
+    color: #6c7086;
+}
+
 .blockquote {
     border-left: 3px solid #89b4fa;
     padding-left: 14px;
@@ -64,11 +83,23 @@ textview text selection {
 
 .table-view {
     margin: 4px 0;
+    border: 1px solid #45475a;
+    border-radius: 8px;
 }
 
 .table-cell {
-    padding: 6px 12px;
-    border: 1px solid #313244;
+    padding: 10px 16px;
+    border-right: 1px solid #313244;
+    border-bottom: 1px solid #313244;
+}
+
+.table-head {
+    background-color: alpha(#89b4fa, 0.15);
+    border-bottom: 2px solid #45475a;
+}
+
+.table-row-even {
+    background-color: alpha(#cdd6f4, 0.04);
 }
 
 .dim-label {
@@ -108,6 +139,10 @@ window, window.background, .background {{
     box-shadow: none;
     outline: none;
 {backdrop}}}
+
+window.background {{
+    border: 1px solid alpha(#b4befe, 0.25);
+}}
 
 textview, textview text {{
     font-family: '{family}', monospace;

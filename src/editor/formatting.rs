@@ -125,6 +125,10 @@ pub fn apply_cycle_heading(buffer: &gtk4::TextBuffer) {
     apply_line_transform(buffer, markdown::cycle_heading_prefix);
 }
 
+pub fn apply_heading_level(buffer: &gtk4::TextBuffer, level: u8) {
+    apply_line_transform(buffer, |line| markdown::set_heading_level(line, level));
+}
+
 pub fn apply_bullet_list(buffer: &gtk4::TextBuffer) {
     apply_line_transform(buffer, markdown::toggle_bullet_list);
 }

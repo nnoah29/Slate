@@ -1,7 +1,7 @@
 # Maintainer: Noah Toffa <iam@toffanoah.com>
 pkgname=slate-git
 _pkgname=slate
-pkgver=0.1.0.r25.g9836d60
+pkgver=0.1.0.r26.g0b9532c
 pkgrel=1
 pkgdesc="Minimalist native Linux Markdown notes application"
 arch=('x86_64' 'aarch64')
@@ -19,7 +19,7 @@ pkgver() {
   if git describe --long --tags --abbrev=7 >/dev/null 2>&1; then
     git describe --long --tags --abbrev=7 | sed 's/^v//;s/\([^-]*-g\)/r\1/;s/-/./g'
   else
-    printf "0.1.0.r%s.g%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
+    printf "0.2.0.r%s.g%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short=7 HEAD)"
   fi
 }
 

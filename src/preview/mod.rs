@@ -26,23 +26,17 @@ impl PreviewView {
         let content_box = gtk4::Box::builder()
             .orientation(gtk4::Orientation::Vertical)
             .spacing(12)
-            .margin_start(24)
-            .margin_end(24)
+            .margin_start(32)
+            .margin_end(32)
             .margin_top(24)
             .margin_bottom(36)
             .hexpand(true)
             .build();
 
-        let clamp = libadwaita::Clamp::builder()
-            .maximum_size(780)
-            .tightening_threshold(560)
-            .child(&content_box)
-            .build();
-
         let scrolled = gtk4::ScrolledWindow::builder()
             .hscrollbar_policy(gtk4::PolicyType::Never)
             .vscrollbar_policy(gtk4::PolicyType::Automatic)
-            .child(&clamp)
+            .child(&content_box)
             .hexpand(true)
             .vexpand(true)
             .build();
@@ -209,10 +203,13 @@ impl<'a> AstRenderer<'a> {
                 self.table_col = 0;
 
                 let grid = gtk4::Grid::builder()
-                    .column_spacing(12)
-                    .row_spacing(6)
+                    .column_spacing(0)
+                    .row_spacing(0)
                     .margin_top(8)
                     .margin_bottom(8)
+                    .hexpand(true)
+                    .halign(gtk4::Align::Fill)
+                    .overflow(gtk4::Overflow::Hidden)
                     .build();
                 grid.add_css_class("table-view");
                 self.table_grid = Some(grid);
@@ -303,8 +300,11 @@ impl<'a> AstRenderer<'a> {
                         self.inline_markup.trim().to_string()
                     };
                     let label = self.create_markup_label(&cell_markup);
-                    label.set_xalign(0.0);
+                    label.set_xalign(self.cell_xalign());
+                    label.set_hexpand(true);
+                    label.set_halign(gtk4::Align::Fill);
                     label.add_css_class("table-cell");
+                    label.add_css_class(self.cell_row_class());
                     grid.attach(&label, self.table_col, self.table_row, 1, 1);
                     self.table_col += 1;
                 }
@@ -320,6 +320,24 @@ impl<'a> AstRenderer<'a> {
                 }
             }
             _ => {}
+        }
+    }
+
+    fn cell_xalign(&self) -> f32 {
+        match self.table_alignments.get(self.table_col as usize) {
+            Some(Alignment::Center) => 0.5,
+            Some(Alignment::Right) => 1.0,
+            _ => 0.0,
+        }
+    }
+
+    fn cell_row_class(&self) -> &'static str {
+        if self.table_is_head {
+            "table-head"
+        } else if self.table_row % 2 == 0 {
+            "table-row-even"
+        } else {
+            "table-row-odd"
         }
     }
 

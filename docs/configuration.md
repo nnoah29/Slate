@@ -26,8 +26,8 @@ Voici un fichier `config.json` complet avec les valeurs par défaut :
   "window_height": 338,
   "is_maximized": false,
   "save_directory": "/home/nnoah",
-  "blur": 0.0,
-  "opacity": 0.5,
+  "blur": 20.0,
+  "opacity": 0.1,
   "recent_files": [
     "/home/nnoah/ok.md"
   ],
@@ -40,7 +40,7 @@ Voici un fichier `config.json` complet avec les valeurs par défaut :
 ## 3. Détail des options
 
 ### `save_directory` *(chaîne de caractères)*
-- **Description** : Répertoire par défaut vers lequel s'ouvrent les boîtes de dialogue "Enregistrer sous..." (`Ctrl+Shift+S`) et "Ouvrir un document" (`Ctrl+O`).
+- **Description** : Dossier dédié aux notes (défaut : `~/Notes`). Une nouvelle note y est enregistrée directement par `Ctrl+S` ou l'enregistrement automatique, sans dialogue, sous le nom de son premier titre (`Titre.md`, `Titre (2).md` en cas de doublon, ou `Note AAAA-MM-JJ HH-MM.md` sans titre). Les dialogues "Enregistrer sous..." (`Ctrl+Shift+S`) et "Ouvrir" (`Ctrl+O`) s'y ouvrent aussi. L'ancienne valeur par défaut (le dossier personnel nu) est traitée comme `~/Notes`.
 - **Support du tilde `~`** : Vous pouvez utiliser un chemin absolu comme `"/home/nnoah/Notes"` ou utiliser la notation raccourcie `"~/Notes"`. Slate résoudra automatiquement le chemin absolu.
 - **Exemple** :
   ```json
@@ -66,21 +66,22 @@ Voici un fichier `config.json` complet avec les valeurs par défaut :
   ```
 
 ### `blur` *(nombre flottant)*
-- **Description** : Degré de flou d'arrière-plan en pixels appliqué via `backdrop-filter`.
+- **Description** : Active le flou d'arrière-plan derrière la fenêtre. GTK 4.24 traduit le `backdrop-filter` en demande de flou au compositeur (protocole Wayland `ext-background-effect-v1`) : la valeur sert d'interrupteur (`0` = désactivé, `> 0` = activé), et c'est le compositeur qui fixe l'intensité réelle (sous Hyprland : `decoration.blur`).
 - **Alias acceptés** : `"background_blur"`, `"blur_degree"`, `"blur_radius"`.
 - **Valeurs** : `0.0` à `100.0`.
-  - `0.0` : Désactive le flou (identique au paramètre `background_blur 0` de Kitty).
-  - `10.0` ou plus : Floute doucement les éléments situés derrière la fenêtre de Slate.
+  - `0.0` : Désactive le flou.
+  - `20.0` (défaut) ou toute valeur positive : active le flou.
+  - Le flou n'est visible que si le fond est translucide : avec `opacity` à `0.9` il reste discret, vers `0.1` (équivalent de Kitty) il est net.
 - **Exemple** :
   ```json
-  "blur": 15.0
+  "blur": 20.0
   ```
 
 ### `opacity` *(nombre flottant)*
 - **Description** : Niveau d'opacité du fond de la fenêtre.
 - **Alias acceptés** : `"background_opacity"`.
 - **Valeurs** : `0.0` (entièrement transparent) à `1.0` (opaque).
-- **Valeur par défaut** : `0.5` (reproduit fidèlement la translucidité de Kitty).
+- **Valeur par défaut** : `0.1` (rendu visuellement équivalent à Kitty avec `background_opacity 0.5`, car le fond de Slate s'ajoute au flou et à l'opacité de Hyprland).
 - **Exemple** :
   ```json
   "opacity": 0.65
@@ -113,7 +114,16 @@ Voici un fichier `config.json` complet avec les valeurs par défaut :
 - **Description** : Liste des 20 derniers fichiers ouverts ou sauvegardés, classés par ordre de consultation récente.
 
 ### `custom_shortcuts` *(objet clé/valeur)*
-- **Description** : Permet de réassigner certains raccourcis clavier de base si souhaité.
+- **Description** : Réassigne un raccourci. La clé est l'identifiant de l'action, la valeur un raccourci au format GTK (`<Control>`, `<Shift>`, `<Alt>` suivis du nom de la touche). Le raccourci personnalisé remplace tous les raccourcis par défaut de l'action ; une entrée invalide est ignorée (avertissement dans les logs).
+- **Identifiants** : `save`, `save_as`, `new`, `open`, `close`, `quit`, `undo`, `redo`, `search`, `replace`, `bold`, `italic`, `link`, `strikethrough`, `heading_cycle`, `heading_1` à `heading_6`, `bullet_list`, `numbered_list`, `code`, `blockquote`, `indent`, `unindent`, `toggle_preview`, `toggle_conceal`, `toggle_wrap`, `zoom_in`, `zoom_out`, `zoom_reset`, `shortcuts_help`, `command_palette`.
+- **Exemple** :
+  ```json
+  "custom_shortcuts": { "toggle_preview": "<Control>r", "bold": "<Control><Shift>b" }
+  ```
+
+### Dictée vocale
+
+`voice_language`, `voice_push_to_talk`, `voice_hold_ms`, `voice_keep_minutes` et `voice_device` règlent la dictée : voir [`voice.md`](voice.md).
 
 ---
 

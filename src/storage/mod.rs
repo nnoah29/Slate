@@ -11,6 +11,7 @@
 ** Storage subsystem, external modification detection, and text diffing.
 */
 
+pub mod naming;
 pub mod reader;
 pub mod writer;
 

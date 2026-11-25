@@ -13,13 +13,16 @@
 
 mod app;
 mod config;
+mod discovery;
 mod document;
 mod editor;
 mod preview;
 mod search;
 mod shortcuts;
 mod storage;
+mod voice;
 mod window;
+mod window_dictation;
 
 use app::SlateApp;
 use clap::Parser;

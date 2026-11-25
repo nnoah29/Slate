@@ -13,18 +13,25 @@
 
 use crate::config::AppConfig;
 use crate::document::Document;
+use crate::document::save_prompt::needs_save_prompt;
 use crate::editor::EditorView;
 use crate::preview::PreviewView;
 use crate::search::SearchReplaceBar;
 use crate::shortcuts::{Action, ShortcutManager};
+use crate::storage::naming::{note_file_stem, unique_note_path};
 use crate::storage::{check_external_modification, generate_diff, read_file, write_file_atomic};
+use crate::voice::controller::DictationController;
+use crate::voice::engine::{ParecordSource, VoiceEngine};
+use crate::voice::indicator::DictationIndicator;
+use crate::voice::model_store::ModelStore;
+use crate::voice::push_to_talk::PushToTalk;
 
 use gtk4::gdk;
 use gtk4::gio;
 use gtk4::glib;
 use gtk4::prelude::*;
 use libadwaita::prelude::*;
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
 use std::time::SystemTime;
@@ -48,14 +55,18 @@ pub enum PendingAction {
 }
 
 pub struct SlateWindow {
-    window: libadwaita::ApplicationWindow,
-    state: Rc<RefCell<WindowState>>,
-    editor_view: Rc<EditorView>,
+    pub(crate) window: libadwaita::ApplicationWindow,
+    pub(crate) state: Rc<RefCell<WindowState>>,
+    pub(crate) editor_view: Rc<EditorView>,
     preview_view: Rc<PreviewView>,
     search_bar: Rc<SearchReplaceBar>,
-    stack: gtk4::Stack,
-    toast_overlay: libadwaita::ToastOverlay,
+    pub(crate) stack: gtk4::Stack,
+    pub(crate) toast_overlay: libadwaita::ToastOverlay,
     shortcut_mgr: ShortcutManager,
+    pub(crate) dictation: Rc<DictationController>,
+    pub(crate) model_store: ModelStore,
+    pub(crate) ptt: RefCell<PushToTalk>,
+    pub(crate) ptt_generation: Cell<u32>,
 }
 
 impl SlateWindow {
@@ -78,6 +89,14 @@ impl SlateWindow {
 
         let font_size = config.font_size;
         let font_family = config.font_family.clone();
+        let (voice_language, voice_keep, voice_hold, voice_device) = (
+            config.voice_language,
+            config.voice_keep_minutes,
+            config.voice_hold_ms,
+            config.voice_device.clone(),
+        );
+        let mut shortcut_mgr = ShortcutManager::new();
+        shortcut_mgr.apply_custom(&config.custom_shortcuts);
 
         let state = Rc::new(RefCell::new(WindowState {
             document: Document::new_untitled(),
@@ -109,8 +128,15 @@ impl SlateWindow {
             .vexpand(true)
             .build();
 
+        let overlay = gtk4::Overlay::builder().hexpand(true).vexpand(true).build();
+        overlay.set_child(Some(&stack));
+        let indicator = Rc::new(DictationIndicator::new(
+            &overlay,
+            editor_view.view().upcast_ref(),
+        ));
+
         main_box.append(search_bar.widget());
-        main_box.append(&stack);
+        main_box.append(&overlay);
 
         let toast_overlay = libadwaita::ToastOverlay::new();
         toast_overlay.set_child(Some(&main_box));
@@ -118,6 +144,27 @@ impl SlateWindow {
         let window_handle = gtk4::WindowHandle::builder().child(&toast_overlay).build();
 
         window.set_content(Some(&window_handle));
+
+        let model_store = ModelStore::new(
+            ModelStore::default_root().unwrap_or_else(|| PathBuf::from("voice-models")),
+        );
+        let toast_target = toast_overlay.clone();
+        let toast: Rc<dyn Fn(&str)> = Rc::new(move |text: &str| {
+            let toast = libadwaita::Toast::builder().title(text).timeout(4).build();
+            toast_target.add_toast(toast);
+        });
+        let engine = VoiceEngine::new(
+            model_store.clone(),
+            Box::new(ParecordSource::new(voice_device)),
+        );
+        let dictation = DictationController::new(
+            engine,
+            editor_view.buffer().buffer().clone().upcast(),
+            indicator,
+            toast,
+            voice_language,
+            voice_keep,
+        );
 
         let slate_win = Rc::new(Self {
             window,
@@ -127,7 +174,11 @@ impl SlateWindow {
             search_bar,
             stack,
             toast_overlay,
-            shortcut_mgr: ShortcutManager::new(),
+            shortcut_mgr,
+            dictation,
+            model_store,
+            ptt: RefCell::new(PushToTalk::new(voice_hold)),
+            ptt_generation: Cell::new(0),
         });
 
         slate_win.init(initial_path);
@@ -148,6 +199,8 @@ impl SlateWindow {
         self.setup_buffer_tracking();
 
         self.setup_shortcuts();
+
+        self.setup_dictation_keys();
 
         self.setup_drag_and_drop();
 
@@ -187,11 +240,14 @@ impl SlateWindow {
         let key_controller = gtk4::EventControllerKey::new();
         let this = Rc::downgrade(self);
 
-        key_controller.connect_key_pressed(move |_, keyval, _, state| {
+        key_controller.connect_key_pressed(move |_, keyval, keycode, state| {
             let Some(this) = this.upgrade() else {
                 return glib::Propagation::Proceed;
             };
-            if let Some(action) = this.shortcut_mgr.match_action(keyval, state) {
+            if let Some(action) = this
+                .shortcut_mgr
+                .match_action_with_keycode(keyval, keycode, state)
+            {
                 this.handle_action(action);
                 return glib::Propagation::Stop;
             }
@@ -258,6 +314,17 @@ impl SlateWindow {
                 crate::editor::formatting::apply_unindent(buffer.upcast_ref());
             }
             Action::ZoomIn => self.change_zoom(1.5),
+            Action::Heading(level) => {
+                crate::editor::formatting::apply_heading_level(buffer.upcast_ref(), level);
+            }
+            Action::ShowShortcuts => {
+                crate::discovery::shortcuts_dialog::present_shortcuts_dialog(
+                    &self.window,
+                    &self.shortcut_mgr,
+                );
+            }
+            Action::CommandPalette => self.open_command_palette(),
+            Action::ToggleDictation => self.toggle_dictation(),
             Action::ZoomOut => self.change_zoom(-1.5),
             Action::ZoomReset => self.reset_zoom(),
             Action::ToggleConceal => self.toggle_conceal(),
@@ -272,6 +339,20 @@ impl SlateWindow {
                 self.show_toast(msg);
             }
         }
+    }
+
+    fn open_command_palette(self: &Rc<Self>) {
+        let this = Rc::downgrade(self);
+        let on_run: Rc<dyn Fn(Action)> = Rc::new(move |action| {
+            if let Some(this) = this.upgrade() {
+                this.handle_action(action);
+            }
+        });
+        crate::discovery::palette::present_command_palette(
+            &self.window,
+            &self.shortcut_mgr,
+            on_run,
+        );
     }
 
     fn toggle_conceal(&self) {
@@ -303,6 +384,7 @@ impl SlateWindow {
     }
 
     pub fn toggle_preview(&self) {
+        self.dictation.cancel();
         let current = self.stack.visible_child_name();
         if current.as_deref() == Some("editor") {
             let text = self.editor_view.buffer().text();
@@ -343,12 +425,12 @@ impl SlateWindow {
         let this = Rc::downgrade(self);
         self.window.connect_close_request(move |_| {
             if let Some(this) = this.upgrade() {
-                let is_dirty = this.state.borrow().document.is_dirty();
-                if is_dirty {
+                if this.has_unsaved_changes() {
                     this.prompt_unsaved_if_dirty(PendingAction::QuitApp);
                     return glib::Propagation::Stop;
                 }
                 this.save_window_geometry();
+                this.dictation.shutdown();
             }
             glib::Propagation::Proceed
         });
@@ -482,12 +564,35 @@ impl SlateWindow {
 
         match path {
             Some(p) => self.perform_save_to_path(&p, is_auto),
-            None => {
-                if !is_auto {
-                    self.save_as_dialog();
-                }
-            }
+            None => self.save_new_note_in_notes_dir(is_auto),
         }
+    }
+
+    /// Enregistre une note sans nom dans le dossier dédié, sans ouvrir de dialogue.
+    fn save_new_note_in_notes_dir(self: &Rc<Self>, is_auto: bool) {
+        let text = self.editor_view.buffer().text();
+        if text.trim().is_empty() {
+            if !is_auto {
+                self.show_toast("Note vide : rien à enregistrer.");
+            }
+            return;
+        }
+        if is_auto && text.trim().lines().count() < 2 {
+            return;
+        }
+        let Some(dir) = self.state.borrow().config.notes_directory() else {
+            if !is_auto {
+                self.save_as_dialog();
+            }
+            return;
+        };
+        let stamp = glib::DateTime::now_local()
+            .and_then(|d| d.format("Note %Y-%m-%d %H-%M"))
+            .map(|s| s.to_string())
+            .unwrap_or_else(|_| "Sans titre".to_string());
+        let stem = note_file_stem(&text, &stamp);
+        let path = unique_note_path(&dir, &stem);
+        self.perform_save_to_path(&path, is_auto);
     }
 
     fn perform_save_to_path(self: &Rc<Self>, path: &Path, is_auto: bool) {
@@ -520,7 +625,7 @@ impl SlateWindow {
     }
 
     fn set_dialog_folder(&self, dialog: &gtk4::FileDialog) {
-        let Some(save_dir) = self.state.borrow().config.resolved_save_directory() else {
+        let Some(save_dir) = self.state.borrow().config.notes_directory() else {
             return;
         };
         let file = gio::File::for_path(&save_dir);
@@ -598,6 +703,7 @@ impl SlateWindow {
     }
 
     pub fn load_file(self: &Rc<Self>, path: &Path) {
+        self.dictation.cancel();
         match read_file(path) {
             Ok((content, mtime)) => {
                 {
@@ -609,11 +715,11 @@ impl SlateWindow {
                 }
                 self.editor_view.buffer().set_text(&content);
                 self.state.borrow_mut().is_reloading = false;
-                
+
                 // Switch to Preview mode (Read-Only) by default for opened files
                 self.preview_view.render_markdown(&content);
                 self.stack.set_visible_child_name("preview");
-                
+
                 self.update_title();
                 self.preview_view.widget().grab_focus();
             }
@@ -624,6 +730,7 @@ impl SlateWindow {
     }
 
     pub fn new_document(self: &Rc<Self>) {
+        self.dictation.cancel();
         {
             let mut s = self.state.borrow_mut();
             s.is_reloading = true;
@@ -631,16 +738,27 @@ impl SlateWindow {
         }
         self.editor_view.buffer().clear();
         self.state.borrow_mut().is_reloading = false;
-        
+
         // Ensure Editor mode is active for new files
         self.stack.set_visible_child_name("editor");
-        
+
         self.update_title();
         self.editor_view.grab_focus();
     }
 
+    /// Dit s'il y a des modifications à proposer d'enregistrer (une note sans nom vide n'en a pas).
+    fn has_unsaved_changes(&self) -> bool {
+        let state = self.state.borrow();
+        let text = self.editor_view.buffer().text();
+        needs_save_prompt(
+            state.document.is_dirty(),
+            state.document.path().is_some(),
+            &text,
+        )
+    }
+
     fn prompt_unsaved_if_dirty(self: &Rc<Self>, pending: PendingAction) {
-        if !self.state.borrow().document.is_dirty() {
+        if !self.has_unsaved_changes() {
             self.execute_pending_action(pending);
             return;
         }

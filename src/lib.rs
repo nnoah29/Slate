@@ -13,10 +13,13 @@
 
 pub mod app;
 pub mod config;
+pub mod discovery;
 pub mod document;
 pub mod editor;
 pub mod preview;
 pub mod search;
 pub mod shortcuts;
 pub mod storage;
+pub mod voice;
 pub mod window;
+pub mod window_dictation;
