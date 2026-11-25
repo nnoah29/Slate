@@ -29,6 +29,11 @@
     <mediatype>text/markdown</mediatype>
   </provides>
   <releases>
+    <release version="0.2.0" date="2026-11-25">
+      <description>
+        <p>Local voice dictation (hold Space or press Ctrl+D), notes saved to a dedicated folder, shortcut discovery and command palette, background blur, a thin window outline, and no save prompt for an empty untitled note.</p>
+      </description>
+    </release>
     <release version="0.1.0" date="2026-09-22">
       <description>
         <p>Initial release of Slate Markdown notes application.</p>
